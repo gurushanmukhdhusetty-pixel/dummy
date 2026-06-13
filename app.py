@@ -45,22 +45,22 @@ T = {
         "staff_name": "पूरा नाम", "role": "भूमিকা", "add_staff": "स्टाफ जोड़ें", "dl_csv": "📥 CSV डाउनलोड करें"
     },
     "Telugu": {
-        "dash": "📊 డాష్‌బోర్డ్", "inv": "📦 ఇన్వెنتరీ", "pos": "🛒 విక్రయ కేంద్రం (POS)", 
+        "dash": "📊 డాష్‌బోర్డ్", "inv": "📦 ఇన్వెంటరీ", "pos": "🛒 విక్రయ కేంద్రం (POS)", 
         "staff": "👥 సిబ్బంది", "analytics": "📈 విశ్లేషణలు", "logout": "🚪 లాగ్ అవుట్",
         "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "మొత్తం ఉత్పత్తులు", "stock": "స్టాక్", "rev": "మొత్తం ఆదాయం",
-        "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉற்பత్తి పేరు", "sku": "బార్‌కోడ్",
-        "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఫోటో అప్‌లోಡ್", "save": "సేవ్ చేయండి",
+        "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్",
+        "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఫోటో అప్‌లోడ్", "save": "సేవ్ చేయండి",
         "db": "📋 డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
         "add": "జోడించు", "cart": "🧾 బండి", "empty": "బండి ఖాళీగా ఉంది",
         "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం",
-        "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
-        "staff_name": "పూర్ತಿ పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోಡ್ చేయండి"
+        "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు", "dl_pdf": "📄 PDFビルలు డౌన్‌లోడ్",
+        "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్ చేయండి"
     }
 }
 
 # -----------------------------
-# 2. SYSTEM INIT & COLOR REPAIR CSS
+# 2. SYSTEM INIT & ACCURATE LIGHT THEME CSS
 # -----------------------------
 def init_db():
     defaults = {
@@ -81,68 +81,53 @@ def get_base64_image(uploaded_file):
 init_db()
 lang = T[st.session_state.lang]
 
-# Comprehensive CSS to Overwrite Streamlit Native Rules
+# Target structural selectors to enforce visibility across text elements, inputs, and components
 st.markdown("""
 <style>
-/* Base Layout & Clean Background */
-.stApp { background-color: #F8FAFC !important; }
-[data-testid="stSidebar"] { background-color: #FFFFFF !important; border-right: 1px solid #E2E8F0 !important; }
-
-/* Global Text Visibility Rules */
-p, h1, h2, h3, h4, h5, h6, span, label, div {
+/* Force dark text color across standard paragraph layout formats */
+.stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label {
     color: #0F172A !important;
 }
 
-/* Sidebar Custom Menu Text Enhancements */
-[data-testid="stSidebar"] div[role="radiogroup"] label {
-    padding: 12px 16px !important;
-    border-radius: 8px !important;
-    margin-bottom: 4px !important;
-    transition: all 0.2s ease-in-out !important;
-    background-color: transparent !important;
+/* Fix text input fields layout block */
+[data-testid="stTextField"] input, [data-testid="stNumberInput"] input, div[data-baseweb="select"] div {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    opacity: 1 !important;
 }
-[data-testid="stSidebar"] div[role="radiogroup"] label:hover {
-    background-color: #F1F5F9 !important;
+
+/* Fix data table/editor typography overlay color */
+div[data-testid="stTable"] table, div[role="grid"] div {
+    color: #0F172A !important;
 }
+
+/* Enlarge navigation elements font scale */
 [data-testid="stSidebar"] div[role="radiogroup"] label p {
-    font-size: 1.15rem !important;
+    font-size: 1.25rem !important;
     font-weight: 600 !important;
-    color: #1E293B !important;
+    color: #334155 !important;
+    padding: 6px 0px;
 }
-/* Active state item text correction */
 [data-testid="stSidebar"] div[role="radiogroup"] [data-checked="true"] p {
     color: #4F46E5 !important;
 }
 
-/* Text Input Forms Contrast Fixes */
-input, textarea, select { 
-    color: #0F172A !important; 
-    background-color: #FFFFFF !important; 
-    border: 1px solid #CBD5E1 !important;
-}
-input:focus {
-    border-color: #4F46E5 !important;
-    box-shadow: 0 0 0 1px #4F46E5 !important;
+/* Primary actions typography safety rule */
+button[kind="primary"] p, button[kind="primary"] span {
+    color: #FFFFFF !important;
 }
 
 /* Metric Display Adjustments */
 [data-testid="stMetricValue"] div { color: #0F172A !important; font-weight: 700 !important; }
-[data-testid="stMetricLabel"] p { color: #475569 !important; font-size: 0.95rem !important; }
+[data-testid="stMetricLabel"] p { color: #475569 !important; }
 
-/* Keep Primary Button Labels White */
-.stButton>button[kind="primary"] p, .stButton>button[kind="primary"] span {
-    color: #FFFFFF !important;
-}
-
-/* Content Panel Card Frameworks */
+/* Structural Content Card Framing */
 [data-testid="metric-container"] {
     background: #FFFFFF !important; border: 1px solid #E2E8F0 !important; padding: 20px !important;
     border-radius: 12px !important; border-top: 4px solid #4F46E5 !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
 }
 div[data-testid="stVerticalBlock"] > div[style*="border"] {
     background: #FFFFFF !important; border-color: #E2E8F0 !important; border-radius: 10px !important; padding: 15px !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -432,7 +417,6 @@ else:
         if role == "Owner":
             menu_options[lang["analytics"]] = analytics
 
-        # Plain, clean navigation mapping (Strictly text + layout based)
         choice = st.radio("Nav", list(menu_options.keys()), label_visibility="collapsed")
         st.divider()
         if st.button(lang["logout"], use_container_width=True):
