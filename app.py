@@ -4,6 +4,8 @@ import uuid
 import base64
 from datetime import datetime
 import streamlit.components.v1 as components
+from PIL import Image
+import io
 
 # --- COMPULSORY LIBRARIES VALIDATION ---
 try:
@@ -64,7 +66,7 @@ T = {
         "tot_prod": "మొత్తం ఉత్పత్తులు", "stock": "స్టాక్", "rev": "మొత్తం ఆదాయం",
         "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉற்பత్తి పేరు", "sku": "బార్‌కోడ్",
         "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఫోటో అప్‌లోడ్", "save": "సేవ్ చేయండి",
-        "db": "📋 డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
+        "db": "📋 డేటాబేస్ (సవరించడానికి డబుль క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
         "add": "జోడించు", "cart": "🧾 బండి", "empty": "బండి ఖాళీగా ఉంది",
         "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం",
         "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
@@ -81,65 +83,21 @@ if "lang" not in st.session_state: st.session_state["lang"] = "English"
 if "low_stock_threshold" not in st.session_state: st.session_state["low_stock_threshold"] = 5
 if "cart" not in st.session_state: st.session_state["cart"] = []
 if "last_receipt" not in st.session_state: st.session_state["last_receipt"] = None
+if "current_page" not in st.session_state: st.session_state["current_page"] = "pos"
 
 lang = T[st.session_state.lang]
 
-# 🌟 PREMIUM CRISP LIGHT MODE UI STYLING FIX 🌟
+# 🌟 CLEAN LIGHT-MODE NATIVE FIX CSS 🌟
 st.markdown("""
 <style>
-/* Enforce light background and crisp dark slate text across elements */
-.stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label { 
-    color: #0F172A !important; 
+/* Clean text scaling adjustments for navigation action options */
+.nav-block-btn {
+    text-align: left; padding: 12px 16px; font-size: 1.2rem; font-weight: 600;
+    margin-bottom: 6px; border-radius: 8px; border: 1px solid #E2E8F0; background-color: #FFFFFF;
 }
-
-/* Force pure high-contrast visibility inside input containers */
-div[data-baseweb="input"] input, div[data-baseweb="input"] textarea, .stNumberInput input, .stTextInput input, .stDateInput input {
-    background-color: #FFFFFF !important;
-    color: #0F172A !important;
-    border: 1px solid #CBD5E1 !important;
-    border-radius: 6px !important;
-}
-
-/* Fix dropdown selection menu visibility */
-div[data-baseweb="select"] {
-    background-color: #FFFFFF !important;
-    color: #0F172A !important;
-}
-
-/* Enforce table text contrast */
-div[data-testid="stTable"] table, div[role="grid"] div, .stDataFrame div { 
-    color: #0F172A !important; 
-}
-
-/* Navigation bar clean layout formatting */
-[data-testid="stSidebar"] div[role="radiogroup"] label p { 
-    font-size: 1.25rem !important; 
-    font-weight: 600 !important; 
-    color: #334155 !important; 
-    padding: 4px 0px; 
-}
-[data-testid="stSidebar"] div[role="radiogroup"] [data-checked="true"] p { 
-    color: #4F46E5 !important; 
-}
-
-/* Primary buttons text preservation */
-button[kind="primary"] p, button[kind="primary"] span { 
-    color: #FFFFFF !important; 
-}
-
-/* Framework containers padding */
-[data-testid="metric-container"] { 
-    background: #FFFFFF !important; 
-    border: 1px solid #E2E8F0 !important; 
-    padding: 20px !important; 
-    border-radius: 12px !important; 
-    border-top: 4px solid #4F46E5 !important; 
-}
-div[data-testid="stVerticalBlock"] > div[style*="border"] { 
-    background: #FFFFFF !important; 
-    border-color: #E2E8F0 !important; 
-    border-radius: 10px !important; 
-    padding: 15px !important; 
+/* Ensure product image frame wrappers look perfectly uniform */
+.product-card-img {
+    border-radius: 8px; max-height: 140px; object-fit: cover; width: 100%;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -152,10 +110,23 @@ def fetch_sales_count():
     res = db.table("sales").select("*").execute()
     return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "customer", "total", "date_str"])
 
-def get_base64_image(uploaded_file):
+# 🌟 AUTO-COMPRESSION PAYLOAD LOGIC TO PREVENT CRASHING 🌟
+def get_compressed_base64_image(uploaded_file):
     if uploaded_file is not None:
-        base64_str = base64.b64encode(uploaded_file.read()).decode()
-        return f"data:{uploaded_file.type};base64,{base64_str}"
+        try:
+            image = Image.open(uploaded_file)
+            # Convert to standard RGB color spectrum mapping
+            if image.mode in ("RGBA", "P"):
+                image = image.convert("RGB")
+            # Downscale image bounds to perfectly crisp dimensions
+            image.thumbnail((300, 300))
+            buffer = io.BytesIO()
+            # Compress image quality aggressively down to a light size footprint
+            image.save(buffer, format="JPEG", quality=60)
+            base64_str = base64.b64encode(buffer.getvalue()).decode()
+            return f"data:image/jpeg;base64,{base64_str}"
+        except Exception as e:
+            st.error(f"Image Compression Failure: {e}")
     return None
 
 # -----------------------------
@@ -235,7 +206,8 @@ def inventory():
             img_file = st.file_uploader(lang["upload"], type=["png", "jpg", "jpeg"])
             
             if st.form_submit_button(lang["save"], type="primary") and name:
-                img_b64 = get_base64_image(img_file)
+                # Compression safety layer execution
+                img_b64 = get_compressed_base64_image(img_file)
                 new_id = str(uuid.uuid4())[:8]
                 db.table("inventory").insert({"id": new_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_b64}).execute()
                 st.success("✅ Added to Inventory Database!")
@@ -369,8 +341,6 @@ def pos():
 
 def staff():
     st.title(lang["staff"])
-    
-    # 🌟 SECURE PRIVILEGES: RESTRICTED STLY TO MAIN MASTER ACCOUNT (shanmukh) 🌟
     is_main_owner = st.session_state.current_user.get("is_main", False) or st.session_state.current_user.get("username") == "shanmukh"
     
     if is_main_owner:
@@ -441,16 +411,26 @@ else:
             st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
             st.divider()
             
-            menu_options = {lang["pos"]: pos, lang["inv"]: inventory}
+            # 🌟 STABLE COMPONENT-BASED ROUTING SYSTEM 🌟
+            if st.button(lang["pos"], use_container_width=True, type="secondary"):
+                st.session_state["current_page"] = "pos"
+            if st.button(lang["inv"], use_container_width=True, type="secondary"):
+                st.session_state["current_page"] = "inventory"
+                
             if role in ["Owner", "Manager"]:
-                menu_options = {lang["dash"]: dashboard} | menu_options | {lang["staff"]: staff}
+                if st.button(lang["dash"], use_container_width=True, type="secondary"):
+                    st.session_state["current_page"] = "dashboard"
+                if st.button(lang["staff"], use_container_width=True, type="secondary"):
+                    st.session_state["current_page"] = "staff"
             if role == "Owner":
-                menu_options[lang["analytics"]] = analytics
-
-            choice = st.radio("Nav", list(menu_options.keys()), label_visibility="collapsed")
+                if st.button(lang["analytics"], use_container_width=True, type="secondary"):
+                    st.session_state["current_page"] = "analytics"
+                    
             st.divider()
-            if st.button(lang["logout"], use_container_width=True):
+            if st.button(lang["logout"], use_container_width=True, type="primary"):
                 st.session_state["logged_in"] = False
                 st.rerun()
 
-        menu_options[choice]()
+        # Dynamic Execution Frame Router
+        pages = {"pos": pos, "inventory": inventory, "dashboard": dashboard, "staff": staff, "analytics": analytics}
+        pages[st.session_state["current_page"]]()
