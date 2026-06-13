@@ -61,65 +61,78 @@ if "current_page" not in st.session_state: st.session_state["current_page"] = "p
 
 lang = T["English"]
 
-# 🌟 CUSTOM PURPLE-BLUE BACKGROUND & RED FONT ACCENT ENGINE 🌟
+# 🌟 PREMIUM STYLISH SLATE BLUE & LAVENDER THEME WITH STABLE FONTS 🌟
 st.markdown("""
 <style>
-/* Inject fluid gradient canvas across application viewports */
-.stApp {
-    background: linear-gradient(135deg, #E0E7FF 0%, #EDE9FE 100%) !important;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html, body, [class*="css"], .stApp {
+    font-family: 'Inter', sans-serif !important;
+    background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%) !important;
     color: #1E293B !important;
 }
 
-/* Enforce red accent system logic selectively to structural headers */
-h1, h2, h3, .stApp h1, .stApp h2, .stApp h3, [data-testid="stMetricLabel"] {
-    color: #DC2626 !important; /* Crimson Red Accent */
+h1, h2, h3, [data-testid="stMetricLabel"] {
+    color: #6D28D9 !important; /* Deep Royal Purple Font Accent */
     font-weight: 700 !important;
 }
 
-/* Base formatting text fallback blocks */
-.stApp p, .stApp span, label { 
-    color: #1E293B !important; 
+/* 🌟 UNIFORM PRODUCT CARD CONTAINER WRAPPERS 🌟 */
+.pos-card-wrapper {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    height: 380px !important; /* Forces completely identical structural card sizes */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
 }
 
-/* Hardcode primary transaction actions to deep crimson matrix values */
+.product-title {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: #1E293B !important;
+    height: 48px !important; /* Truncates spacing errors for line overflows */
+    overflow: hidden;
+}
+
+.product-card-img { 
+    border-radius: 8px; 
+    height: 140px !important; 
+    object-fit: cover; 
+    width: 100%; 
+    background-color: #F8FAFC;
+}
+
+/* Button UI styling metrics */
 button[kind="primary"] {
-    background-color: #DC2626 !important; 
+    background-color: #6D28D9 !important; /* Deep Purple Interactive Blocks */
     color: #FFFFFF !important;
-    border: none !important;
-    font-weight: bold !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
 }
 button[kind="primary"]:hover {
-    background-color: #991B1B !important;
+    background-color: #5B21B6 !important;
 }
-
-/* Navigation button frame wrappers */
 button[kind="secondary"] {
     background-color: #FFFFFF !important;
-    color: #4338CA !important; 
-    border: 1px solid #C7D2FE !important;
+    color: #4338CA !important; /* Elegant Indigo Text Accent */
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 8px !important;
+}
+button[kind="secondary"]:hover {
+    background-color: #EEF2F6 !important;
 }
 
-/* KPI data panels card mapping */
 [data-testid="metric-container"] { 
     background: #FFFFFF !important; 
     border: 1px solid #E2E8F0 !important; 
     padding: 20px !important; 
     border-radius: 12px !important; 
-    border-top: 4px solid #DC2626 !important; /* Red indicator trace line */
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important;
-}
-
-div[data-baseweb="input"] input, .stNumberInput input, .stTextInput input {
-    background-color: #FFFFFF !important;
-    color: #1E293B !important;
-    border: 1px solid #CBD5E1 !important;
-}
-
-.product-card-img { 
-    border-radius: 8px; 
-    max-height: 140px; 
-    object-fit: cover; 
-    width: 100%; 
+    border-top: 4px solid #6D28D9 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -209,7 +222,7 @@ def dashboard():
             df_chart['date_only'] = pd.to_datetime(df_chart['date_str']).dt.date
             daily_rev = df_chart.groupby('date_only')['total'].sum().reset_index()
             daily_rev.columns = ['Date', 'Revenue (₹)']
-            st.line_chart(daily_rev.set_index('Date'), color="#DC2626")
+            st.line_chart(daily_rev.set_index('Date'), color="#6D28D9")
         else: st.info("No pipeline logs parsed.")
         
     with col_b:
@@ -284,7 +297,9 @@ def pos():
 
     col1, col2 = st.columns([2.0, 1.2])
     with col1:
-        search = st.text_input(lang["search"])
+        # 🌟 DYNAMIC REAL-TIME INPUT EVENT: MATCHES CHARACTERS INSTANTLY AS YOU TYPE 🌟
+        search = st.text_input(lang["search"], key="pos_search_input")
+        
         display_df = df_inv if not search else df_inv[
             df_inv['name'].str.contains(search, case=False) | 
             df_inv['sku'].str.contains(search, case=False) |
@@ -292,26 +307,34 @@ def pos():
         ]
 
         cols = st.columns(3)
-        for idx, row in display_df.iterrows():
+        for idx, row in display_df.reset_index(drop=True).iterrows():
             with cols[idx % 3]:
-                with st.container(border=True):
-                    if pd.notna(row.get('image')) and row['image']: 
-                        st.image(row['image'], use_container_width=True)
-                    st.markdown(f"**{row['name']}**")
-                    st.caption(f"ID Shortcode: `{row['id']}`")
-                    color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else "gray"
-                    st.markdown(f"<span style='color:{color}'>{lang['stock']}: {row['quantity']}</span>", unsafe_allow_html=True)
-                    st.markdown(f"#### ₹{row['price']:,.2f}")
-                    
-                    qty = st.number_input("Q", 1, max(int(row['quantity']), 1), key=f"q_{row['id']}", label_visibility="collapsed")
-                    if st.button(lang["add"], key=f"b_{row['id']}", type="primary", use_container_width=True):
-                        if row['quantity'] >= qty:
-                            item = next((i for i in st.session_state.cart if i["id"] == row["id"]), None)
-                            if item:
-                                item["quantity"] += qty; item["subtotal"] = item["price"] * item["quantity"]
-                            else:
-                                st.session_state.cart.append({"id": row["id"], "name": row["name"], "price": row["price"], "quantity": qty, "subtotal": row["price"] * qty})
-                            st.rerun()
+                # HTML structured layout block injected directly for hardcoded layout symmetry
+                st.markdown(f'<div class="pos-card-wrapper">', unsafe_allow_html=True)
+                
+                if pd.notna(row.get('image')) and row['image']: 
+                    st.image(row['image'], use_container_width=True)
+                else:
+                    st.markdown('<div style="height:140px; background:#F8FAFC; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#94A3B8;">No Image</div>', unsafe_allow_html=True)
+                
+                st.markdown(f'<div class="product-title">{row["name"]}</div>', unsafe_allow_html=True)
+                st.markdown(f'<code style="color:#6D28D9;">Code: {row["id"]}</code>', unsafe_allow_html=True)
+                
+                color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else "#64748B"
+                st.markdown(f'<div style="font-size:14px; color:{color}; font-weight:500;">Stock: {row["quantity"]}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="font-size:1.3rem; font-weight:700; color:#1E293B; margin: 4px 0;">₹{row["price"]:,.2f}</div>', unsafe_allow_html=True)
+                
+                qty = st.number_input("Q", 1, max(int(row['quantity']), 1), key=f"q_{row['id']}", label_visibility="collapsed")
+                if st.button(lang["add"], key=f"b_{row['id']}", type="primary", use_container_width=True):
+                    if row['quantity'] >= qty:
+                        item = next((i for i in st.session_state.cart if i["id"] == row["id"]), None)
+                        if item:
+                            item["quantity"] += qty; item["subtotal"] = item["price"] * item["quantity"]
+                        else:
+                            st.session_state.cart.append({"id": row["id"], "name": row["name"], "price": row["price"], "quantity": qty, "subtotal": row["price"] * qty})
+                        st.rerun()
+                
+                st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
         with st.container(border=True):
@@ -350,7 +373,7 @@ def pos():
                     db.table("sales").insert({"id": s_id, "customer": cust, "total": total, "date_str": d_str}).execute()
                     st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": cust, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total}
                     if PDF_READY:
-                        st.session_state['pdf'] = generate_pdf(s_id, d_str, cust, st.session_state.cart, subtotal, disc_amt, tax_amt, total)
+                        st.session_state['pdf'] = generate_pdf(s_id, d_str, crush_name:=cust, st.session_state.cart, subtotal, disc_amt, tax_amt, total)
                         st.session_state['pdf_name'] = f"Invoice_{s_id}.pdf"
                     st.session_state.cart.clear(); st.rerun()
 
@@ -362,7 +385,7 @@ def pos():
             <!DOCTYPE html><html><head><style>
                 body {{ font-family: monospace; color: #1E293B; padding: 15px; background: #fff; margin: 0; }}
                 .container {{ border: 2px dashed #94A3B8; padding: 30px; max-width: 520px; margin: 0 auto; border-radius: 8px; }}
-                .print-btn {{ width: 100%; padding: 14px; background: #DC2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 25px; }}
+                .print-btn {{ width: 100%; padding: 14px; background: #6D28D9; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 25px; }}
                 .flex {{ display: flex; justify-content: space-between; font-size: 15px; margin: 4px 0; }}
                 .line {{ border-bottom: 2px dashed #94A3B8; margin: 15px 0; }}
                 @media print {{ .print-btn {{ display: none !important; }} .container {{ border: none; }} }}
@@ -436,7 +459,7 @@ def analytics():
         st.subheader("📅 Gross Revenue Progression")
         daily_perf = df_sales.groupby('date_only')['total'].sum().reset_index()
         daily_perf.columns = ['Date', 'Sales (₹)']
-        st.bar_chart(daily_perf.set_index('Date'), color="#DC2626")
+        st.bar_chart(daily_perf.set_index('Date'), color="#6D28D9")
         
     with c2:
         st.subheader("⏰ Traffic Density Peak Distribution Hours")
@@ -474,9 +497,12 @@ else:
         with st.sidebar:
             role = st.session_state.current_user["role"]
             st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
+            
+            # 🌟 INTERCHANGED POSITION: LANGUAGE MODULE PLACED SECURELY AT THE TOP 🌟
+            new_lang = st.selectbox("🌐 Language", ["English"], index=0, label_visibility="collapsed")
             st.divider()
             
-            # Master control panel items bound sequentially at the top grid segment
+            # Master control panels navigation mapping
             if st.button(lang["pos"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "pos"
             if st.button(lang["inv"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "inventory"
             if role in ["Owner", "Manager"]:
@@ -485,14 +511,11 @@ else:
             if role == "Owner":
                 if st.button(lang["analytics"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "analytics"
                     
+            # 🌟 INTERCHANGED POSITION: LOGOUT BUTTON FORCED TO ABSOLUTE BOTTOM PERIMETER 🌟
+            st.markdown("<br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
             st.divider()
-            # 🌟 CLEANUP FIX: DOOR EMOJI OBLITERATED FROM THE LOGOUT STRING TERMINATION YIELD 🌟
             if st.button(lang["logout"], use_container_width=True, type="primary"):
                 st.session_state["logged_in"] = False; st.rerun()
-            
-            st.markdown("<br><br><br><br><br>", unsafe_allow_html=True)
-            st.divider()
-            new_lang = st.selectbox("🌐 Language", ["English"], index=0, label_visibility="collapsed")
 
         pages = {"pos": pos, "inventory": inventory, "dashboard": dashboard, "staff": staff, "analytics": analytics}
         pages[st.session_state["current_page"]]()
