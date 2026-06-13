@@ -42,25 +42,25 @@ T = {
         "add": "जोड़ें", "cart": "🧾 कार्ट", "empty": "कार्ट खाली है",
         "sub": "उप-योग", "disc": "छूट", "tax": "कर", "tot": "कुल",
         "cust": "ग्राहक का नाम", "checkout": "💳 चेकआउट और बिल (PDF)", "dl_pdf": "📄 PDF बिल डाउनलोड करें",
-        "staff_name": "पूरा नाम", "role": "भूमिका", "add_staff": "स्टाफ जोड़ें", "dl_csv": "📥 CSV डाउनलोड करें"
+        "staff_name": "पूरा नाम", "role": "भूमিকা", "add_staff": "स्टाफ जोड़ें", "dl_csv": "📥 CSV डाउनलोड करें"
     },
     "Telugu": {
-        "dash": "📊 డాష్‌బోర్డ్", "inv": "📦 ఇన్వెంటరీ", "pos": "🛒 విక్రయ కేంద్రం (POS)", 
+        "dash": "📊 డాష్‌బోర్డ్", "inv": "📦 ఇన్వెنتరీ", "pos": "🛒 విక్రయ కేంద్రం (POS)", 
         "staff": "👥 సిబ్బంది", "analytics": "📈 విశ్లేషణలు", "logout": "🚪 లాగ్ అవుట్",
         "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "మొత్తం ఉత్పత్తులు", "stock": "స్టాక్", "rev": "మొత్తం ఆదాయం",
-        "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్",
-        "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఫోటో అప్‌లోడ్", "save": "సేవ్ చేయండి",
+        "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉற்பత్తి పేరు", "sku": "బార్‌కోడ్",
+        "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఫోటో అప్‌లోಡ್", "save": "సేవ్ చేయండి",
         "db": "📋 డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
         "add": "జోడించు", "cart": "🧾 బండి", "empty": "బండి ఖాళీగా ఉంది",
         "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం",
         "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
-        "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్ చేయండి"
+        "staff_name": "పూర్ತಿ పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోಡ್ చేయండి"
     }
 }
 
 # -----------------------------
-# 2. SYSTEM INIT & FIXED CSS
+# 2. SYSTEM INIT & COLOR REPAIR CSS
 # -----------------------------
 def init_db():
     defaults = {
@@ -81,47 +81,68 @@ def get_base64_image(uploaded_file):
 init_db()
 lang = T[st.session_state.lang]
 
-# Added rule to make Sidebar Navigation Font much larger
+# Comprehensive CSS to Overwrite Streamlit Native Rules
 st.markdown("""
 <style>
-/* Core Backgrounds */
-.stApp { background-color: #F8FAFC; }
-[data-testid="stSidebar"] { background-color: #FFFFFF; border-right: 1px solid #E2E8F0; }
+/* Base Layout & Clean Background */
+.stApp { background-color: #F8FAFC !important; }
+[data-testid="stSidebar"] { background-color: #FFFFFF !important; border-right: 1px solid #E2E8F0 !important; }
 
-/* 🌟 INCREASE NAVIGATION BAR FONT SIZE 🌟 */
-[data-testid="stSidebar"] .stRadio label p {
-    font-size: 1.3rem !important;
+/* Global Text Visibility Rules */
+p, h1, h2, h3, h4, h5, h6, span, label, div {
+    color: #0F172A !important;
+}
+
+/* Sidebar Custom Menu Text Enhancements */
+[data-testid="stSidebar"] div[role="radiogroup"] label {
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+    margin-bottom: 4px !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: transparent !important;
+}
+[data-testid="stSidebar"] div[role="radiogroup"] label:hover {
+    background-color: #F1F5F9 !important;
+}
+[data-testid="stSidebar"] div[role="radiogroup"] label p {
+    font-size: 1.15rem !important;
     font-weight: 600 !important;
-    padding: 10px 0px;
     color: #1E293B !important;
 }
-
-/* Force Typography Visibility */
-p, h1, h2, h3, h4, h5, h6, span, label, [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
-    color: #1E293B !important;
+/* Active state item text correction */
+[data-testid="stSidebar"] div[role="radiogroup"] [data-checked="true"] p {
+    color: #4F46E5 !important;
 }
 
-/* Protect Primary Buttons */
+/* Text Input Forms Contrast Fixes */
+input, textarea, select { 
+    color: #0F172A !important; 
+    background-color: #FFFFFF !important; 
+    border: 1px solid #CBD5E1 !important;
+}
+input:focus {
+    border-color: #4F46E5 !important;
+    box-shadow: 0 0 0 1px #4F46E5 !important;
+}
+
+/* Metric Display Adjustments */
+[data-testid="stMetricValue"] div { color: #0F172A !important; font-weight: 700 !important; }
+[data-testid="stMetricLabel"] p { color: #475569 !important; font-size: 0.95rem !important; }
+
+/* Keep Primary Button Labels White */
 .stButton>button[kind="primary"] p, .stButton>button[kind="primary"] span {
     color: #FFFFFF !important;
 }
 
-/* Styled Containers */
+/* Content Panel Card Frameworks */
 [data-testid="metric-container"] {
-    background: #FFFFFF; border: 1px solid #E2E8F0; padding: 20px;
-    border-radius: 12px; border-top: 4px solid #4F46E5;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    background: #FFFFFF !important; border: 1px solid #E2E8F0 !important; padding: 20px !important;
+    border-radius: 12px !important; border-top: 4px solid #4F46E5 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
 }
 div[data-testid="stVerticalBlock"] > div[style*="border"] {
-    background: #FFFFFF; border-color: #E2E8F0; border-radius: 10px; padding: 15px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-/* Inputs */
-input { 
-    color: #1E293B !important; 
-    background-color: #FFFFFF !important; 
-    border: 1px solid #CBD5E1 !important; 
+    background: #FFFFFF !important; border-color: #E2E8F0 !important; border-radius: 10px !important; padding: 15px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -300,30 +321,28 @@ def pos():
                     st.session_state.cart.clear()
                     st.rerun()
 
-        # Render On-Screen Receipt inside an isolated iFrame so ONLY the receipt prints
         if st.session_state.last_receipt:
             r = st.session_state.last_receipt
             items_html = "".join([
-                f"<div style='display:flex; justify-content:space-between; margin-bottom:4px;'>"
+                f"<div style='display:flex; justify-content:space-between; margin-bottom:4px; font-weight:600;'>"
                 f"<span>{i['quantity']}x {i['name'][:15]}</span>"
                 f"<span>Rs. {i['subtotal']:,.2f}</span>"
                 f"</div>" for i in r['items']
             ])
             
-            # Isolated HTML document for perfect printing
             iframe_html = f"""
             <!DOCTYPE html>
             <html>
             <head>
             <style>
                 body {{ font-family: 'Courier New', Courier, monospace; color: #000; margin: 0; padding: 0; background: #fff; }}
-                .receipt-container {{ border: 2px dashed #000; padding: 20px; max-width: 350px; margin: 0 auto; }}
+                .receipt-container {{ border: 2px dashed #000; padding: 20px; max-width: 320px; margin: 0 auto; }}
                 .print-btn {{ width: 100%; padding: 12px; background: #4F46E5; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 20px; }}
-                .print-btn:hover {{ background: #4338ca; }}
                 .flex {{ display: flex; justify-content: space-between; }}
                 .line {{ border-bottom: 1px dashed #000; margin: 10px 0; }}
                 @media print {{
                     .print-btn {{ display: none !important; }}
+                    body {{ padding: 0; margin: 0; }}
                     .receipt-container {{ border: none; padding: 0; margin: 0; max-width: 100%; }}
                 }}
             </style>
@@ -348,17 +367,14 @@ def pos():
             </body>
             </html>
             """
-            
             st.success("✅ Sale processed successfully!")
             
             c_left, c_right = st.columns([1, 1])
             with c_left:
-                st.markdown("### Print")
-                # Using components.html completely isolates the print command
-                components.html(iframe_html, height=500, scrolling=True)
+                components.html(iframe_html, height=480, scrolling=True)
             with c_right:
-                st.markdown("### Download")
                 if 'pdf' in st.session_state:
+                    st.markdown("<br><br>", unsafe_allow_html=True)
                     st.download_button(lang["dl_pdf"], data=st.session_state['pdf'], file_name=st.session_state['pdf_name'], mime="application/pdf", type="primary", use_container_width=True)
 
 def staff():
@@ -416,6 +432,7 @@ else:
         if role == "Owner":
             menu_options[lang["analytics"]] = analytics
 
+        # Plain, clean navigation mapping (Strictly text + layout based)
         choice = st.radio("Nav", list(menu_options.keys()), label_visibility="collapsed")
         st.divider()
         if st.button(lang["logout"], use_container_width=True):
