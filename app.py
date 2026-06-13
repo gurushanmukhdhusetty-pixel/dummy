@@ -35,7 +35,7 @@ except Exception as e:
 T = {
     "English": {
         "dash": "📊 Dashboard Metrics", "inv": "📦 Inventory Management", "pos": "🛒 Point of Sale", 
-        "staff": "👥 Staff & User Management", "analytics": "📈 Advanced Analytics", "logout": "🚪 Logout",
+        "staff": "👥 Staff & User Management", "analytics": "📈 Advanced Analytics", "logout": "Logout",
         "login_btn": "Login", "user": "Username", "pass": "Password",
         "tot_prod": "Unique Items", "stock": "Total Items Stocked", "rev": "Net Gross Revenue",
         "add_prod": "➕ Register New Product", "p_name": "Product Name", "sku": "SKU / Barcode",
@@ -61,57 +61,58 @@ if "current_page" not in st.session_state: st.session_state["current_page"] = "p
 
 lang = T["English"]
 
-# 🌟 HIGH-CONTRAST SLATE BLUE & PURPLE PRODUCTION THEME 🌟
+# 🌟 CUSTOM PURPLE-BLUE BACKGROUND & RED FONT ACCENT ENGINE 🌟
 st.markdown("""
 <style>
-/* Global light slate background reset */
+/* Inject fluid gradient canvas across application viewports */
 .stApp {
-    background-color: #F8FAFC !important;
+    background: linear-gradient(135deg, #E0E7FF 0%, #EDE9FE 100%) !important;
     color: #1E293B !important;
 }
 
-/* Hardcode dark gray text across all native text fragments to stop bleeding */
-.stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label { 
+/* Enforce red accent system logic selectively to structural headers */
+h1, h2, h3, .stApp h1, .stApp h2, .stApp h3, [data-testid="stMetricLabel"] {
+    color: #DC2626 !important; /* Crimson Red Accent */
+    font-weight: 700 !important;
+}
+
+/* Base formatting text fallback blocks */
+.stApp p, .stApp span, label { 
     color: #1E293B !important; 
 }
 
-/* Sidebar clean tint overrides */
-[data-testid="stSidebar"] {
-    background-color: #EEF2F6 !important;
-    border-right: 1px solid #E2E8F0 !important;
+/* Hardcode primary transaction actions to deep crimson matrix values */
+button[kind="primary"] {
+    background-color: #DC2626 !important; 
+    color: #FFFFFF !important;
+    border: none !important;
+    font-weight: bold !important;
+}
+button[kind="primary"]:hover {
+    background-color: #991B1B !important;
 }
 
-/* High-contrast form text box overrides */
-div[data-baseweb="input"] input, .stNumberInput input, .stTextInput input {
+/* Navigation button frame wrappers */
+button[kind="secondary"] {
     background-color: #FFFFFF !important;
-    color: #1E293B !important;
-    border: 1px solid #CBD5E1 !important;
+    color: #4338CA !important; 
+    border: 1px solid #C7D2FE !important;
 }
 
-/* Card metrics styling modules */
+/* KPI data panels card mapping */
 [data-testid="metric-container"] { 
     background: #FFFFFF !important; 
     border: 1px solid #E2E8F0 !important; 
     padding: 20px !important; 
     border-radius: 12px !important; 
-    border-top: 4px solid #7C3AED !important; /* Purple accent top bar */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    border-top: 4px solid #DC2626 !important; /* Red indicator trace line */
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important;
 }
 
-/* Enforce button color matrix properties */
-button[kind="primary"] {
-    background-color: #4F46E5 !important; /* Indigo Master Accent */
-    color: #FFFFFF !important;
-    border: none !important;
-}
-button[kind="secondary"] {
+div[data-baseweb="input"] input, .stNumberInput input, .stTextInput input {
     background-color: #FFFFFF !important;
-    color: #7C3AED !important; /* Purple Accent Text */
-    border: 1px solid #D8B4FE !important;
-}
-button[kind="secondary"]:hover {
-    background-color: #F3E8FF !important;
-    border-color: #C084FC !important;
+    color: #1E293B !important;
+    border: 1px solid #CBD5E1 !important;
 }
 
 .product-card-img { 
@@ -208,7 +209,7 @@ def dashboard():
             df_chart['date_only'] = pd.to_datetime(df_chart['date_str']).dt.date
             daily_rev = df_chart.groupby('date_only')['total'].sum().reset_index()
             daily_rev.columns = ['Date', 'Revenue (₹)']
-            st.line_chart(daily_rev.set_index('Date'), color="#7C3AED")
+            st.line_chart(daily_rev.set_index('Date'), color="#DC2626")
         else: st.info("No pipeline logs parsed.")
         
     with col_b:
@@ -357,12 +358,11 @@ def pos():
             r = st.session_state.last_receipt
             items_html = "".join([f"<div class='flex'><span>{i['quantity']}x {i['name'][:20]}</span><span>Rs. {i['subtotal']:,.2f}</span></div>" for i in r['items']])
             
-            # 🌟 WIDENED RECEIPT HTML INJECTOR CANVAS STYLE PROPERTIES 🌟
             iframe_html = f"""
             <!DOCTYPE html><html><head><style>
                 body {{ font-family: monospace; color: #1E293B; padding: 15px; background: #fff; margin: 0; }}
                 .container {{ border: 2px dashed #94A3B8; padding: 30px; max-width: 520px; margin: 0 auto; border-radius: 8px; }}
-                .print-btn {{ width: 100%; padding: 14px; background: #4F46E5; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 25px; }}
+                .print-btn {{ width: 100%; padding: 14px; background: #DC2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 25px; }}
                 .flex {{ display: flex; justify-content: space-between; font-size: 15px; margin: 4px 0; }}
                 .line {{ border-bottom: 2px dashed #94A3B8; margin: 15px 0; }}
                 @media print {{ .print-btn {{ display: none !important; }} .container {{ border: none; }} }}
@@ -387,7 +387,6 @@ def pos():
             
             st.success("✅ Transaction logged successfully!")
             
-            # --- FULL WIDTH EMBEDDED RECEIPT SECTION PANEL ---
             st.markdown("### 🧾 System Transaction Receipt")
             st.markdown('<div style="display: flex; justify-content: center; width: 100%; background: #F1F5F9; padding: 20px; border-radius: 12px; margin-bottom: 15px;">', unsafe_allow_html=True)
             components.html(iframe_html, height=560, width=560, scrolling=True)
@@ -437,7 +436,7 @@ def analytics():
         st.subheader("📅 Gross Revenue Progression")
         daily_perf = df_sales.groupby('date_only')['total'].sum().reset_index()
         daily_perf.columns = ['Date', 'Sales (₹)']
-        st.bar_chart(daily_perf.set_index('Date'), color="#4F46E5")
+        st.bar_chart(daily_perf.set_index('Date'), color="#DC2626")
         
     with c2:
         st.subheader("⏰ Traffic Density Peak Distribution Hours")
@@ -477,7 +476,7 @@ else:
             st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
             st.divider()
             
-            # Core View Controllers placed securely at the top
+            # Master control panel items bound sequentially at the top grid segment
             if st.button(lang["pos"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "pos"
             if st.button(lang["inv"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "inventory"
             if role in ["Owner", "Manager"]:
@@ -487,10 +486,10 @@ else:
                 if st.button(lang["analytics"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "analytics"
                     
             st.divider()
+            # 🌟 CLEANUP FIX: DOOR EMOJI OBLITERATED FROM THE LOGOUT STRING TERMINATION YIELD 🌟
             if st.button(lang["logout"], use_container_width=True, type="primary"):
                 st.session_state["logged_in"] = False; st.rerun()
             
-            # Lang module pushed cleanly to the lower perimeter
             st.markdown("<br><br><br><br><br>", unsafe_allow_html=True)
             st.divider()
             new_lang = st.selectbox("🌐 Language", ["English"], index=0, label_visibility="collapsed")
