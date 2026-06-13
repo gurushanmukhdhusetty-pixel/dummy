@@ -61,10 +61,65 @@ if "current_page" not in st.session_state: st.session_state["current_page"] = "p
 
 lang = T["English"]
 
+# 🌟 HIGH-CONTRAST SLATE BLUE & PURPLE PRODUCTION THEME 🌟
 st.markdown("""
 <style>
-.stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label { color: inherit; }
-.product-card-img { border-radius: 8px; max-height: 140px; object-fit: cover; width: 100%; }
+/* Global light slate background reset */
+.stApp {
+    background-color: #F8FAFC !important;
+    color: #1E293B !important;
+}
+
+/* Hardcode dark gray text across all native text fragments to stop bleeding */
+.stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label { 
+    color: #1E293B !important; 
+}
+
+/* Sidebar clean tint overrides */
+[data-testid="stSidebar"] {
+    background-color: #EEF2F6 !important;
+    border-right: 1px solid #E2E8F0 !important;
+}
+
+/* High-contrast form text box overrides */
+div[data-baseweb="input"] input, .stNumberInput input, .stTextInput input {
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+    border: 1px solid #CBD5E1 !important;
+}
+
+/* Card metrics styling modules */
+[data-testid="metric-container"] { 
+    background: #FFFFFF !important; 
+    border: 1px solid #E2E8F0 !important; 
+    padding: 20px !important; 
+    border-radius: 12px !important; 
+    border-top: 4px solid #7C3AED !important; /* Purple accent top bar */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+}
+
+/* Enforce button color matrix properties */
+button[kind="primary"] {
+    background-color: #4F46E5 !important; /* Indigo Master Accent */
+    color: #FFFFFF !important;
+    border: none !important;
+}
+button[kind="secondary"] {
+    background-color: #FFFFFF !important;
+    color: #7C3AED !important; /* Purple Accent Text */
+    border: 1px solid #D8B4FE !important;
+}
+button[kind="secondary"]:hover {
+    background-color: #F3E8FF !important;
+    border-color: #C084FC !important;
+}
+
+.product-card-img { 
+    border-radius: 8px; 
+    max-height: 140px; 
+    object-fit: cover; 
+    width: 100%; 
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -136,6 +191,7 @@ def dashboard():
     total_tx = len(df_sales)
     avg_ticket = tot_rev / total_tx if total_tx > 0 else 0.0
     
+    st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Net Gross Revenue", f"₹{tot_rev:,.2f}")
     c2.metric("Total Transactions Logged", f"{total_tx} Orders")
@@ -152,7 +208,7 @@ def dashboard():
             df_chart['date_only'] = pd.to_datetime(df_chart['date_str']).dt.date
             daily_rev = df_chart.groupby('date_only')['total'].sum().reset_index()
             daily_rev.columns = ['Date', 'Revenue (₹)']
-            st.line_chart(daily_rev.set_index('Date'), color="#4F46E5")
+            st.line_chart(daily_rev.set_index('Date'), color="#7C3AED")
         else: st.info("No pipeline logs parsed.")
         
     with col_b:
@@ -225,7 +281,7 @@ def pos():
     df_inv = fetch_inventory()
     if df_inv.empty: st.warning("Inventory empty. Populate tables inside dashboard first."); return
 
-    col1, col2 = st.columns([2.2, 1])
+    col1, col2 = st.columns([2.0, 1.2])
     with col1:
         search = st.text_input(lang["search"])
         display_df = df_inv if not search else df_inv[
@@ -299,39 +355,46 @@ def pos():
 
         if st.session_state.last_receipt:
             r = st.session_state.last_receipt
-            items_html = "".join([f"<div class='flex'><span>{i['quantity']}x {i['name'][:15]}</span><span>Rs. {i['subtotal']:,.2f}</span></div>" for i in r['items']])
+            items_html = "".join([f"<div class='flex'><span>{i['quantity']}x {i['name'][:20]}</span><span>Rs. {i['subtotal']:,.2f}</span></div>" for i in r['items']])
+            
+            # 🌟 WIDENED RECEIPT HTML INJECTOR CANVAS STYLE PROPERTIES 🌟
             iframe_html = f"""
             <!DOCTYPE html><html><head><style>
-                body {{ font-family: monospace; color: #000; padding: 10px; background: #fff; }}
-                .container {{ border: 2px dashed #000; padding: 15px; max-width: 440px; margin: 0 auto; }}
-                .print-btn {{ width: 100%; padding: 12px; background: #4F46E5; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 20px; }}
-                .flex {{ display: flex; justify-content: space-between; }}
-                .line {{ border-bottom: 1px dashed #000; margin: 10px 0; }}
+                body {{ font-family: monospace; color: #1E293B; padding: 15px; background: #fff; margin: 0; }}
+                .container {{ border: 2px dashed #94A3B8; padding: 30px; max-width: 520px; margin: 0 auto; border-radius: 8px; }}
+                .print-btn {{ width: 100%; padding: 14px; background: #4F46E5; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 25px; }}
+                .flex {{ display: flex; justify-content: space-between; font-size: 15px; margin: 4px 0; }}
+                .line {{ border-bottom: 2px dashed #94A3B8; margin: 15px 0; }}
                 @media print {{ .print-btn {{ display: none !important; }} .container {{ border: none; }} }}
             </style></head><body>
                 <div class="container">
-                    <h3 style="text-align:center; margin-top:0;">TITAN CONVENIENCE & GROCERY</h3>
+                    <h2 style="text-align:center; margin-top:0; letter-spacing: 1px;">TITAN CONVENIENCE & GROCERY</h2>
                     <div class="line"></div>
-                    <div><b>Bill No:</b> {r['id']}</div><div><b>Date/Time:</b> {r['date']}</div><div><b>Customer:</b> {r['cust']}</div>
-                    <div class="line"></div>{items_html}<div class="line"></div>
+                    <div class="flex"><span><b>Bill No:</b> {r['id']}</span></div>
+                    <div class="flex"><span><b>Date/Time:</b> {r['date']}</span></div>
+                    <div class="flex"><span><b>Customer:</b> {r['cust']}</span></div>
+                    <div class="line"></div>
+                    <div style="font-weight: bold; margin-bottom: 8px;" class="flex"><span>Item Allocation</span><span>Subtotal</span></div>
+                    {items_html}
+                    <div class="line"></div>
                     <div class="flex"><span>Subtotal:</span> <span>Rs. {r['sub']:,.2f}</span></div>
                     <div class="flex"><span>Discount:</span> <span>-Rs. {r['disc']:,.2f}</span></div>
                     <div class="flex"><span>Tax (5%):</span> <span>+Rs. {r['tax']:,.2f}</span></div>
-                    <h3 class="flex" style="margin:4px 0 0 0;"><span>TOTAL:</span> <span>Rs. {r['tot']:,.2f}</span></h3>
-                </div><button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
+                    <div class="line"></div>
+                    <h2 class="flex" style="margin:0; padding-top: 5px;"><span>TOTAL DUED:</span> <span>Rs. {r['tot']:,.2f}</span></h2>
+                </div><button class="print-btn" onclick="window.print()">🖨️ Execute Print Routing</button>
             </body></html>"""
+            
             st.success("✅ Transaction logged successfully!")
             
-            # --- WIDENED & CENTERED FLUID VIEWPORT COLUMN CONTAINER ---
-            c_left, c_right = st.columns([1.8, 1])
-            with c_left:
-                st.markdown('<div style="display: flex; justify-content: center; width: 100%;">', unsafe_allow_html=True)
-                components.html(iframe_html, height=520, width=500, scrolling=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-            with c_right:
-                if 'pdf' in st.session_state:
-                    st.markdown("<br><br><br>", unsafe_allow_html=True)
-                    st.download_button(lang["dl_pdf"], data=st.session_state['pdf'], file_name=st.session_state['pdf_name'], mime="application/pdf", type="primary", use_container_width=True)
+            # --- FULL WIDTH EMBEDDED RECEIPT SECTION PANEL ---
+            st.markdown("### 🧾 System Transaction Receipt")
+            st.markdown('<div style="display: flex; justify-content: center; width: 100%; background: #F1F5F9; padding: 20px; border-radius: 12px; margin-bottom: 15px;">', unsafe_allow_html=True)
+            components.html(iframe_html, height=560, width=560, scrolling=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            if 'pdf' in st.session_state:
+                st.download_button(lang["dl_pdf"], data=st.session_state['pdf'], file_name=st.session_state['pdf_name'], mime="application/pdf", type="primary", use_container_width=True)
 
 def staff():
     st.title(lang["staff"])
@@ -410,11 +473,11 @@ else:
                     else: st.error("Access Denied: Invalid Credentials.")
     else:
         with st.sidebar:
-            # 🌟 INTERCHANGED POSITION: NAVIGATION BUTTONS PLACED AT THE ABSOLUTE TOP 🌟
             role = st.session_state.current_user["role"]
             st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
             st.divider()
             
+            # Core View Controllers placed securely at the top
             if st.button(lang["pos"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "pos"
             if st.button(lang["inv"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "inventory"
             if role in ["Owner", "Manager"]:
@@ -427,8 +490,8 @@ else:
             if st.button(lang["logout"], use_container_width=True, type="primary"):
                 st.session_state["logged_in"] = False; st.rerun()
             
-            # 🌟 INTERCHANGED POSITION: SETTNGS HEADER REMOVED, LANGUAGE CONTROLLER AT THE ABSOLUTE BOTTOM 🌟
-            st.markdown("<br><br><br><br><br><br>", unsafe_allow_html=True)
+            # Lang module pushed cleanly to the lower perimeter
+            st.markdown("<br><br><br><br><br>", unsafe_allow_html=True)
             st.divider()
             new_lang = st.selectbox("🌐 Language", ["English"], index=0, label_visibility="collapsed")
 
