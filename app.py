@@ -53,7 +53,7 @@ T = {
         "tot_prod": "अद्वितीय उत्पाद", "stock": "स्टॉक में कुल इकाइयाँ", "rev": "कुल सकल राजस्व",
         "add_prod": "➕ नया उत्पाद पंजीकृत करें", "p_name": "उत्पाद का नाम", "sku": "बारकोड / SKU",
         "price": "कीमत (₹)", "qty": "मात्रा", "upload": "📷 उत्पाद फोटो अपलोड करें", "save": "डेटाबेस में सहेजें",
-        "db": "📋 लाइव डेटाबेस (सीधे संपादित करें या नीचे चित्र बदलें)", "search": "🔍 उत्पाद खोजें...",
+        "db": "📋 लाइव डेटाबेस (सीधे संशोधित करें या नीचे चित्र बदलें)", "search": "🔍 उत्पाद खोजें...",
         "add": "जोड़ें", "cart": "🧾 वर्तमान कार्ट", "empty": "कार्ट खाली है",
         "sub": "उप-योग", "disc": "छूट", "tax": "कर", "tot": "कुल योग",
         "cust": "ग्राहक का नाम", "checkout": "💳 चेकआउट और बिल बनाएं", "dl_pdf": "📄 PDF बिल डाउनलोड करें",
@@ -64,7 +64,7 @@ T = {
         "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "📈 అడ్వాన్స్డ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
         "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
-        "add_prod": "➕ కొత్త ఉత్పత్తిని చేర్చండి", "p_name": "ఉற்பత్తి పేరు", "sku": "బార్‌కోడ్ / SKU",
+        "add_prod": "➕ కొత్త ఉత్పత్తిని చేర్చండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్ / SKU",
         "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఉత్పత్తి ఫోటో అప్‌లోడ్", "save": "డేటాబేస్‌లో సేవ్ చేయి",
         "db": "📋 లైవ్ డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను వెతకండి...",
         "add": "జోడించు", "cart": "🧾 ప్రస్తుత కార్ట్", "empty": "కార్ట్ ఖాళీగా ఉంది",
@@ -87,7 +87,7 @@ if "current_page" not in st.session_state: st.session_state["current_page"] = "p
 
 lang = T[st.session_state["lang"]]
 
-# 🌟 ADVANCED FLEXBOX SIDEBAR AND COSMETIC THEME CSS 🌟
+# 🌟 DYNAMIC RESPONSIVE LIGHT COLOR INTERFACE ENGINE 🌟
 st.markdown("""
 <style>
 .stApp {
@@ -106,6 +106,7 @@ button[kind="primary"] {
     color: #FFFFFF !important;
     border: none !important;
     font-weight: bold !important;
+    padding: 12px 24px !important;
 }
 button[kind="primary"]:hover {
     background-color: #991B1B !important;
@@ -116,22 +117,37 @@ button[kind="secondary"] {
     border: 1px solid #C7D2FE !important;
 }
 
-/* 🌟 SIDEBAR FLEX CONTAINER HOOK TO DESTROY NEGATIVE GAP SPACE 🌟 */
-[data-testid="stSidebarUserContent"] {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    height: calc(100vh - 60px) !important;
+/* 🌟 RESPONSIVE MOBILE FRIENDLY LOGIN CARD UI 🌟 */
+.login-container {
+    background: #FFFFFF !important;
+    padding: 35px 25px !important;
+    border-radius: 16px !important;
+    border-top: 6px solid #DC2626 !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    margin: 40px auto !important;
+    text-align: center;
+}
+.login-header {
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    color: #1E293B !important;
+    margin-bottom: 5px !important;
+}
+.login-subheader {
+    font-size: 14px !important;
+    color: #64748B !important;
+    margin-bottom: 25px !important;
 }
 
-/* Premium Visual Treatment for Profile ID Branding Header */
-.user-profile-badge {
+/* Form input spacing and sizing adjustments */
+div[data-baseweb="input"] input, .stNumberInput input, .stTextInput input {
     background-color: #FFFFFF !important;
-    border-left: 4px solid #DC2626 !important;
-    padding: 12px 16px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
-    margin-bottom: 15px !important;
+    color: #1E293B !important;
+    border: 1px solid #CBD5E1 !important;
+    padding: 10px 14px !important;
+    font-size: 16px !important;
 }
 
 div[data-testid="stVerticalBlockBorderWrapper"] > div {
@@ -150,10 +166,21 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div {
     border-top: 4px solid #DC2626 !important; 
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important;
 }
-div[data-baseweb="input"] input, .stNumberInput input, .stTextInput input {
+
+[data-testid="stSidebarUserContent"] {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: calc(100vh - 60px) !important;
+}
+
+.user-profile-badge {
     background-color: #FFFFFF !important;
-    color: #1E293B !important;
-    border: 1px solid #CBD5E1 !important;
+    border-left: 4px solid #DC2626 !important;
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
+    margin-bottom: 15px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -496,25 +523,31 @@ if not DB_CONNECTED:
     st.info(f"Diagnostic Error Output: {CONNECTION_ERROR}")
 else:
     if not st.session_state["logged_in"]:
-        st.markdown("<br><br><h2 style='text-align: center;'>🏬 Titan Inventory & POS System</h2>", unsafe_allow_html=True)
-        c1, c2, c3 = st.columns([1, 1, 1])
+        # 🌟 HIGHLY OPTIMIZED MOBILE-FRIENDLY REBRANDED CARD CONTAINER LAYOUT 🌟
+        st.markdown("""
+        <div class="login-container">
+            <div class="login-header">🏬 Titan Inventory & POS System</div>
+            <div class="login-subheader">Authorized Operator Gateway Security Check</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Center the form elements cleanly on any resolution matrix scale bounds
+        c1, c2, c3 = st.columns([1, 2, 1])
         with c2:
-            with st.container(border=True):
+            with st.form("auth_form", clear_on_submit=False):
                 usr = st.text_input("Username").strip().lower()
                 pwd = st.text_input("Password", type="password")
-                if st.button("Login", type="primary", use_container_width=True):
+                if st.form_submit_button("Authenticate Sign In", type="primary", use_container_width=True):
                     res = db.table("users").select("*").eq("username", usr).execute()
                     if res.data and res.data[0]["password_hash"] == pwd:
                         st.session_state["logged_in"] = True
                         st.session_state["current_user"] = {"username": usr, "role": res.data[0]["role"], "is_main": res.data[0]["is_main"]}
                         st.rerun()
-                    else: st.error("Access Denied: Invalid Credentials.")
+                    else: 
+                        st.error("Access Denied: Invalid Operator Credentials.")
     else:
         with st.sidebar:
-            # 🌟 FLEX CONTAINER TOP ANCHOR BLOCK 🌟
             st.markdown("<div>", unsafe_allow_html=True)
-            
-            # Premium Visual Header Profile treatment card
             role = st.session_state.current_user["role"]
             st.markdown(f"""
             <div class="user-profile-badge">
@@ -524,7 +557,6 @@ else:
             </div>
             """, unsafe_allow_html=True)
             
-            # Nav routing switches
             if st.button(lang["pos"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "pos"
             if st.button(lang["inv"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "inventory"
             if role in ["Owner", "Manager"]:
@@ -533,7 +565,6 @@ else:
             if role == "Owner":
                 if st.button(lang["analytics"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "analytics"
                     
-            # Language option placed cleanly underneath
             st.divider()
             chosen_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
             if chosen_lang != st.session_state.lang:
@@ -541,7 +572,6 @@ else:
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
             
-            # 🌟 FLEX CONTAINER BOTTOM ANCHOR BLOCK (NO GAP ERRORS) 🌟
             st.markdown("<div>", unsafe_allow_html=True)
             st.divider()
             if st.button(lang["logout"], use_container_width=True, type="primary"):
