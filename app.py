@@ -61,7 +61,7 @@ if "current_page" not in st.session_state: st.session_state["current_page"] = "p
 
 lang = T["English"]
 
-# 🌟 CUSTOM STYLING WITH UNIFORM POS CARDS 🌟
+# 🌟 PREMIUM COLOR CRITERIA STYLING ENGINE 🌟
 st.markdown("""
 <style>
 .stApp {
@@ -90,35 +90,15 @@ button[kind="secondary"] {
     border: 1px solid #C7D2FE !important;
 }
 
-/* 🌟 UNIFORM GRID BOX FOR PRODUCT CARDS 🌟 */
-.pos-card-wrapper {
-    background-color: #FFFFFF !important;
-    border: 1px solid #E2E8F0 !important;
-    border-radius: 12px !important;
-    padding: 16px !important;
-    min-height: 340px !important;
-    max-height: 340px !important;
+/* 🌟 FORCES ORIGINAL STREAMLIT CONTAINERS TO BE FULLY UNIFORM 🌟 */
+div[data-testid="stVerticalBlockBorderWrapper"] > div {
+    min-height: 410px !important;
+    max-height: 410px !important;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
-    margin-bottom: 16px;
 }
-.product-card-img { 
-    border-radius: 8px; 
-    height: 120px !important; 
-    object-fit: cover; 
-    width: 100%; 
-    margin-bottom: 8px;
-}
-.product-title {
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    color: #1E293B !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
+
 [data-testid="metric-container"] { 
     background: #FFFFFF !important; 
     border: 1px solid #E2E8F0 !important; 
@@ -295,7 +275,7 @@ def pos():
 
     col1, col2 = st.columns([2.0, 1.2])
     with col1:
-        # 🌟 INSTANT SEARCH-AS-YOU-TYPE TRIGGERED ON EACH KEYSTROKE 🌟
+        # 🌟 SEARCH AS YOU TYPE TRIGGER 🌟
         search = st.text_input(lang["search"], value="", autocomplete="off")
         
         display_df = df_inv if not search else df_inv[
@@ -307,36 +287,29 @@ def pos():
         cols = st.columns(3)
         for idx, row in display_df.reset_index().iterrows():
             with cols[idx % 3]:
-                # Custom HTML layout injection wrapper container block
-                st.markdown(f"""
-                <div class="pos-card-wrapper">
-                    <div class="product-title">{row['name']}</div>
-                    <div style="font-size: 13px; color:#64748B;">ID: <code>{row['id']}</code></div>
-                """, unsafe_allow_html=True)
-                
-                if pd.notna(row.get('image')) and row['image']: 
-                    st.image(row['image'], use_container_width=True)
-                else:
-                    st.markdown("<div style='height:120px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#94A3B8;'>No Image</div>", unsafe_allow_html=True)
-                
-                color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else "#64748B"
-                st.markdown(f"""
-                    <div style='display:flex; justify-content:space-between; align-items:center; margin-top:8px;'>
-                        <span style='color:{color}; font-size:14px; font-weight:600;'>Stock: {row['quantity']}</span>
-                        <span style='font-size:18px; font-weight:700; color:#DC2626;'>₹{row['price']:,.2f}</span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                qty = st.number_input("Q", 1, max(int(row['quantity']), 1), key=f"q_{row['id']}", label_visibility="collapsed")
-                if st.button(lang["add"], key=f"b_{row['id']}", type="primary", use_container_width=True):
-                    if row['quantity'] >= qty:
-                        item = next((i for i in st.session_state.cart if i["id"] == row["id"]), None)
-                        if item:
-                            item["quantity"] += qty; item["subtotal"] = item["price"] * item["quantity"]
-                        else:
-                            st.session_state.cart.append({"id": row["id"], "name": row["name"], "price": row["price"], "quantity": qty, "subtotal": row["price"] * qty})
-                        st.rerun()
+                # 🌟 NATIVE STREAMLIT LAYOUT WITH HEIGHT ENFORCEMENT 🌟
+                with st.container(border=True):
+                    if pd.notna(row.get('image')) and row['image']: 
+                        st.image(row['image'], use_container_width=True)
+                    else:
+                        st.markdown("<div style='height:140px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#94A3B8; margin-bottom:8px;'>No Image</div>", unsafe_allow_html=True)
+                    
+                    st.markdown(f"**{row['name']}**")
+                    st.caption(f"ID Shortcode: `{row['id']}`")
+                    
+                    color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else "gray"
+                    st.markdown(f"<span style='color:{color}'>{lang['stock']}: {row['quantity']}</span>", unsafe_allow_html=True)
+                    st.markdown(f"#### ₹{row['price']:,.2f}")
+                    
+                    qty = st.number_input("Q", 1, max(int(row['quantity']), 1), key=f"q_{row['id']}", label_visibility="collapsed")
+                    if st.button(lang["add"], key=f"b_{row['id']}", type="primary", use_container_width=True):
+                        if row['quantity'] >= qty:
+                            item = next((i for i in st.session_state.cart if i["id"] == row["id"]), None)
+                            if item:
+                                item["quantity"] += qty; item["subtotal"] = item["price"] * item["quantity"]
+                            else:
+                                st.session_state.cart.append({"id": row["id"], "name": row["name"], "price": row["price"], "quantity": qty, "subtotal": row["price"] * qty})
+                            st.rerun()
 
     with col2:
         with st.container(border=True):
@@ -501,7 +474,7 @@ else:
             st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
             st.divider()
             
-            # 🌟 POSITION 1: NAVIGATION MODULES MOVED TO THE ABSOLUTE TOP 🌟
+            # Navigation elements placed at the absolute top grid block
             if st.button(lang["pos"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "pos"
             if st.button(lang["inv"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "inventory"
             if role in ["Owner", "Manager"]:
@@ -510,15 +483,14 @@ else:
             if role == "Owner":
                 if st.button(lang["analytics"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "analytics"
                     
-            # 🌟 POSITION 2: LANGUAGE SELECTBOX PLACED DIRECTLY BELOW ROUTING BUTTONS 🌟
+            # Language option placed cleanly underneath
             st.divider()
             new_lang = st.selectbox("🌐 Language", ["English"], index=0, label_visibility="collapsed")
             
-            # Pushes the logout block layout to the absolute bottom of the side column area
             st.markdown("<br><br><br><br><br>", unsafe_allow_html=True)
             st.divider()
             
-            # 🌟 POSITION 3: LOGOUT CLEANED UP AT THE ABSOLUTE BOTTOM 🌟
+            # Clean Logout button sitting alone at the absolute bottom
             if st.button(lang["logout"], use_container_width=True, type="primary"):
                 st.session_state["logged_in"] = False; st.rerun()
 
