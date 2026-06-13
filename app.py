@@ -65,7 +65,7 @@ T = {
 def init_db():
     defaults = {
         "users": {"shanmukh": {"pass": "owner123", "role": "Owner"}, "staff": {"pass": "staff123", "role": "Staff"}},
-        "logged_in": False, "current_user": None, "lang": "English", "dark_mode": False, "low_stock_threshold": 5,
+        "logged_in": False, "current_user": None, "lang": "English", "low_stock_threshold": 5,
         "inventory": pd.DataFrame(columns=["id", "sku", "name", "price", "quantity", "image"]),
         "cart": [], "sales": [], "staff_list": [], "last_receipt": None
     }
@@ -81,42 +81,48 @@ def get_base64_image(uploaded_file):
 init_db()
 lang = T[st.session_state.lang]
 
-# Fix: Aggressive Dynamic CSS to force text visibility
-bg_color = "#121212" if st.session_state.dark_mode else "#F8FAFC"
-card_bg = "#1E1E1E" if st.session_state.dark_mode else "#ffffff"
-text_color = "#EFEFEF" if st.session_state.dark_mode else "#1e293b"
-border_color = "#333333" if st.session_state.dark_mode else "#e2e8f0"
-
-st.markdown(f"""
+# Added rule to make Sidebar Navigation Font much larger
+st.markdown("""
 <style>
 /* Core Backgrounds */
-.stApp {{ background-color: {bg_color}; }}
-[data-testid="stSidebar"] {{ background-color: {card_bg}; }}
+.stApp { background-color: #F8FAFC; }
+[data-testid="stSidebar"] { background-color: #FFFFFF; border-right: 1px solid #E2E8F0; }
+
+/* 🌟 INCREASE NAVIGATION BAR FONT SIZE 🌟 */
+[data-testid="stSidebar"] .stRadio label p {
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    padding: 10px 0px;
+    color: #1E293B !important;
+}
 
 /* Force Typography Visibility */
-.stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown span {{
-    color: {text_color} !important;
-}}
-label, [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
-    color: {text_color} !important;
-}}
+p, h1, h2, h3, h4, h5, h6, span, label, [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
+    color: #1E293B !important;
+}
 
 /* Protect Primary Buttons */
-.stButton>button[kind="primary"] p, .stButton>button[kind="primary"] span {{
-    color: white !important;
-}}
+.stButton>button[kind="primary"] p, .stButton>button[kind="primary"] span {
+    color: #FFFFFF !important;
+}
 
 /* Styled Containers */
-[data-testid="metric-container"] {{
-    background: {card_bg}; border: 1px solid {border_color}; padding: 20px;
+[data-testid="metric-container"] {
+    background: #FFFFFF; border: 1px solid #E2E8F0; padding: 20px;
     border-radius: 12px; border-top: 4px solid #4F46E5;
-}}
-div[data-testid="stVerticalBlock"] > div[style*="border"] {{
-    background: {card_bg}; border-color: {border_color}; border-radius: 10px; padding: 15px;
-}}
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+div[data-testid="stVerticalBlock"] > div[style*="border"] {
+    background: #FFFFFF; border-color: #E2E8F0; border-radius: 10px; padding: 15px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
 
 /* Inputs */
-input {{ color: {text_color} !important; }}
+input { 
+    color: #1E293B !important; 
+    background-color: #FFFFFF !important; 
+    border: 1px solid #CBD5E1 !important; 
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -235,7 +241,7 @@ def pos():
                     if pd.notna(row.get('image')) and row['image']: 
                         st.image(row['image'], use_container_width=True)
                     st.markdown(f"**{row['name']}**")
-                    color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else ("#A0A0A0" if st.session_state.dark_mode else "gray")
+                    color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else "gray"
                     st.markdown(f"<span style='color:{color}'>{lang['stock']}: {row['quantity']}</span>", unsafe_allow_html=True)
                     st.markdown(f"#### ₹{row['price']:,.2f}")
                     
@@ -294,39 +300,64 @@ def pos():
                     st.session_state.cart.clear()
                     st.rerun()
 
+        # Render On-Screen Receipt inside an isolated iFrame so ONLY the receipt prints
         if st.session_state.last_receipt:
             r = st.session_state.last_receipt
-            items_html = "".join([f"<div>{i['quantity']}x {i['name'][:15]} <span style='float:right'>₹{i['subtotal']:,.2f}</span></div>" for i in r['items']])
+            items_html = "".join([
+                f"<div style='display:flex; justify-content:space-between; margin-bottom:4px;'>"
+                f"<span>{i['quantity']}x {i['name'][:15]}</span>"
+                f"<span>Rs. {i['subtotal']:,.2f}</span>"
+                f"</div>" for i in r['items']
+            ])
             
-            # Inline styled receipt to protect from dark/light themes
-            receipt_html = f"""
-            <div style="background:{card_bg}; color:{text_color}; font-family:monospace; padding:20px; border:2px dashed {border_color}; border-radius:8px; max-width:400px; margin:0 auto;">
-                <h3 style="text-align:center; margin-top:0; color:{text_color};">SHANMUKH ENTERPRISES</h3>
-                <div style="border-bottom:1px dashed {border_color}; margin-bottom:10px;"></div>
-                <div><b>Bill No:</b> {r['id']}</div>
-                <div><b>Date:</b> {r['date']}</div>
-                <div><b>Customer:</b> {r['cust']}</div>
-                <div style="border-bottom:1px dashed {border_color}; margin:10px 0;"></div>
-                {items_html}
-                <div style="border-bottom:1px dashed {border_color}; margin:10px 0;"></div>
-                <div>Subtotal: <span style="float:right">₹{r['sub']:,.2f}</span></div>
-                <div>Discount: <span style="float:right">-₹{r['disc']:,.2f}</span></div>
-                <div>Tax (5%): <span style="float:right">+₹{r['tax']:,.2f}</span></div>
-                <h3 style="margin-bottom:0; color:{text_color};">TOTAL: <span style="float:right">₹{r['tot']:,.2f}</span></h3>
-                <div style="text-align:center; margin-top:15px; font-size:12px;">Thank you!</div>
-            </div>
+            # Isolated HTML document for perfect printing
+            iframe_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <style>
+                body {{ font-family: 'Courier New', Courier, monospace; color: #000; margin: 0; padding: 0; background: #fff; }}
+                .receipt-container {{ border: 2px dashed #000; padding: 20px; max-width: 350px; margin: 0 auto; }}
+                .print-btn {{ width: 100%; padding: 12px; background: #4F46E5; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 20px; }}
+                .print-btn:hover {{ background: #4338ca; }}
+                .flex {{ display: flex; justify-content: space-between; }}
+                .line {{ border-bottom: 1px dashed #000; margin: 10px 0; }}
+                @media print {{
+                    .print-btn {{ display: none !important; }}
+                    .receipt-container {{ border: none; padding: 0; margin: 0; max-width: 100%; }}
+                }}
+            </style>
+            </head>
+            <body>
+                <div class="receipt-container">
+                    <h3 style="text-align:center; margin-top:0;">SHANMUKH ENTERPRISES</h3>
+                    <div class="line"></div>
+                    <div><b>Bill No:</b> {r['id']}</div>
+                    <div><b>Date:</b> {r['date']}</div>
+                    <div><b>Customer:</b> {r['cust']}</div>
+                    <div class="line"></div>
+                    {items_html}
+                    <div class="line"></div>
+                    <div class="flex"><span>Subtotal:</span> <span>Rs. {r['sub']:,.2f}</span></div>
+                    <div class="flex"><span>Discount:</span> <span>-Rs. {r['disc']:,.2f}</span></div>
+                    <div class="flex"><span>Tax (5%):</span> <span>+Rs. {r['tax']:,.2f}</span></div>
+                    <h3 class="flex" style="margin-bottom:0;"><span>TOTAL:</span> <span>Rs. {r['tot']:,.2f}</span></h3>
+                    <div style="text-align:center; margin-top:15px; font-size:12px;">Thank you for your business!</div>
+                </div>
+                <button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
+            </body>
+            </html>
             """
-            st.markdown(receipt_html, unsafe_allow_html=True)
-
-            c_btn1, c_btn2 = st.columns(2)
-            with c_btn1:
-                components.html("""
-                    <button onclick="window.parent.print()" 
-                    style="width:100%; padding:10px; background:#4F46E5; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">
-                    🖨️ Print Receipt
-                    </button>
-                """, height=50)
-            with c_btn2:
+            
+            st.success("✅ Sale processed successfully!")
+            
+            c_left, c_right = st.columns([1, 1])
+            with c_left:
+                st.markdown("### Print")
+                # Using components.html completely isolates the print command
+                components.html(iframe_html, height=500, scrolling=True)
+            with c_right:
+                st.markdown("### Download")
                 if 'pdf' in st.session_state:
                     st.download_button(lang["dl_pdf"], data=st.session_state['pdf'], file_name=st.session_state['pdf_name'], mime="application/pdf", type="primary", use_container_width=True)
 
@@ -369,11 +400,6 @@ if not st.session_state.logged_in:
 else:
     with st.sidebar:
         st.subheader("⚙️ Settings")
-        dark = st.toggle("🌙 Dark Mode", value=st.session_state.dark_mode)
-        if dark != st.session_state.dark_mode:
-            st.session_state.dark_mode = dark
-            st.rerun()
-            
         new_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
         if new_lang != st.session_state.lang:
             st.session_state.lang = new_lang
