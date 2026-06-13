@@ -45,6 +45,32 @@ T = {
         "sub": "Subtotal", "disc": "Discount", "tax": "Tax", "tot": "Total",
         "cust": "Customer Name", "checkout": "💳 Checkout & Generate Bill", "dl_pdf": "📄 Download PDF Bill",
         "staff_name": "Full Name", "role": "Role", "add_staff": "Add Staff Member", "dl_csv": "📥 Export CSV"
+    },
+    "Hindi": {
+        "dash": "📊 डैशबोर्ड मेट्रिक्स", "inv": "📦 इन्वेंटरी प्रबंधन", "pos": "🛒 बिक्री केंद्र (POS)", 
+        "staff": "👥 स्टाफ और उपयोगकर्ता प्रबंधन", "analytics": "📈 उन्नत विश्लेषिकी", "logout": "लॉग आउट",
+        "login_btn": "लॉग इन करें", "user": "उपयोगकर्ता नाम", "pass": "पासवर्ड",
+        "tot_prod": "अद्वितीय उत्पाद", "stock": "स्टॉक में कुल इकाइयाँ", "rev": "कुल सकल राजस्व",
+        "add_prod": "➕ नया उत्पाद पंजीकृत करें", "p_name": "उत्पाद का नाम", "sku": "बारकोड / SKU",
+        "price": "कीमत (₹)", "qty": "मात्रा", "upload": "📷 उत्पाद फोटो अपलोड करें", "save": "डेटाबेस में सहेजें",
+        "db": "📋 लाइव डेटाबेस (सीधे संपादित करें या नीचे चित्र बदलें)", "search": "🔍 उत्पाद खोजें...",
+        "add": "जोड़ें", "cart": "🧾 वर्तमान कार्ट", "empty": "कार्ट खाली है",
+        "sub": "उप-योग", "disc": "छूट", "tax": "कर", "tot": "कुल योग",
+        "cust": "ग्राहक का नाम", "checkout": "💳 चेकआउट और बिल बनाएं", "dl_pdf": "📄 PDF बिल डाउनलोड करें",
+        "staff_name": "पूरा नाम", "role": "भूमिका", "add_staff": "स्टाफ सदस्य जोड़ें", "dl_csv": "📥 CSV निर्यात करें"
+    },
+    "Telugu": {
+        "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంటరీ మేనేజ్‌మెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
+        "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "📈 అడ్వాన్స్డ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
+        "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
+        "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
+        "add_prod": "➕ కొత్త ఉత్పత్తిని చేర్చండి", "p_name": "ఉற்பత్తి పేరు", "sku": "బార్‌కోడ్ / SKU",
+        "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఉత్పత్తి ఫోటో అప్‌లోడ్", "save": "డేటాబేస్‌లో సేవ్ చేయి",
+        "db": "📋 లైవ్ డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను వెతకండి...",
+        "add": "జోడించు", "cart": "🧾 ప్రస్తుత కార్ట్", "empty": "కార్ట్ ఖాళీగా ఉంది",
+        "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం బిల్లు",
+        "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు జనరేషన్", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
+        "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్"
     }
 }
 
@@ -59,9 +85,9 @@ if "cart" not in st.session_state: st.session_state["cart"] = []
 if "last_receipt" not in st.session_state: st.session_state["last_receipt"] = None
 if "current_page" not in st.session_state: st.session_state["current_page"] = "pos"
 
-lang = T["English"]
+lang = T[st.session_state["lang"]]
 
-# 🌟 PREMIUM COLOR CRITERIA STYLING ENGINE 🌟
+# 🌟 ADVANCED FLEXBOX SIDEBAR AND COSMETIC THEME CSS 🌟
 st.markdown("""
 <style>
 .stApp {
@@ -90,7 +116,24 @@ button[kind="secondary"] {
     border: 1px solid #C7D2FE !important;
 }
 
-/* 🌟 FORCES ORIGINAL STREAMLIT CONTAINERS TO BE FULLY UNIFORM 🌟 */
+/* 🌟 SIDEBAR FLEX CONTAINER HOOK TO DESTROY NEGATIVE GAP SPACE 🌟 */
+[data-testid="stSidebarUserContent"] {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: calc(100vh - 60px) !important;
+}
+
+/* Premium Visual Treatment for Profile ID Branding Header */
+.user-profile-badge {
+    background-color: #FFFFFF !important;
+    border-left: 4px solid #DC2626 !important;
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
+    margin-bottom: 15px !important;
+}
+
 div[data-testid="stVerticalBlockBorderWrapper"] > div {
     min-height: 410px !important;
     max-height: 410px !important;
@@ -173,7 +216,7 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
 # 5. CORE INTERFACE PAGES
 # -----------------------------
 def dashboard():
-    st.title("📊 Executive Operational Dashboard")
+    st.title(lang["dash"])
     df_inv = fetch_inventory()
     df_sales = fetch_sales_count()
     
@@ -185,10 +228,10 @@ def dashboard():
     
     st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Net Gross Revenue", f"₹{tot_rev:,.2f}")
+    c1.metric(lang["rev"], f"₹{tot_rev:,.2f}")
     c2.metric("Total Transactions Logged", f"{total_tx} Orders")
     c3.metric("Average Ticket Value", f"₹{avg_ticket:,.2f}")
-    c4.metric("Live Catalog SKUs", f"{tot_sku} Items")
+    c4.metric(lang["tot_prod"], f"{tot_sku} Items")
     
     st.markdown("---")
     
@@ -212,7 +255,7 @@ def dashboard():
         else: st.success("🍏 All parameters normal. Stock levels fully satisfied.")
 
 def inventory():
-    st.title("📦 Comprehensive Catalog Registry")
+    st.title(lang["inv"])
     df_inv = fetch_inventory()
     
     with st.expander(lang["add_prod"]):
@@ -269,13 +312,12 @@ def inventory():
             st.rerun()
 
 def pos():
-    st.title("🛒 Transaction Terminal (POS)")
+    st.title(lang["pos"])
     df_inv = fetch_inventory()
     if df_inv.empty: st.warning("Inventory empty. Populate tables inside dashboard first."); return
 
     col1, col2 = st.columns([2.0, 1.2])
     with col1:
-        # 🌟 SEARCH AS YOU TYPE TRIGGER 🌟
         search = st.text_input(lang["search"], value="", autocomplete="off")
         
         display_df = df_inv if not search else df_inv[
@@ -287,7 +329,6 @@ def pos():
         cols = st.columns(3)
         for idx, row in display_df.reset_index().iterrows():
             with cols[idx % 3]:
-                # 🌟 NATIVE STREAMLIT LAYOUT WITH HEIGHT ENFORCEMENT 🌟
                 with st.container(border=True):
                     if pd.notna(row.get('image')) and row['image']: 
                         st.image(row['image'], use_container_width=True)
@@ -459,9 +500,9 @@ else:
         c1, c2, c3 = st.columns([1, 1, 1])
         with c2:
             with st.container(border=True):
-                usr = st.text_input(lang["user"]).strip().lower()
-                pwd = st.text_input(lang["pass"], type="password")
-                if st.button(lang["login_btn"], type="primary", use_container_width=True):
+                usr = st.text_input("Username").strip().lower()
+                pwd = st.text_input("Password", type="password")
+                if st.button("Login", type="primary", use_container_width=True):
                     res = db.table("users").select("*").eq("username", usr).execute()
                     if res.data and res.data[0]["password_hash"] == pwd:
                         st.session_state["logged_in"] = True
@@ -470,11 +511,20 @@ else:
                     else: st.error("Access Denied: Invalid Credentials.")
     else:
         with st.sidebar:
-            role = st.session_state.current_user["role"]
-            st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
-            st.divider()
+            # 🌟 FLEX CONTAINER TOP ANCHOR BLOCK 🌟
+            st.markdown("<div>", unsafe_allow_html=True)
             
-            # Navigation elements placed at the absolute top grid block
+            # Premium Visual Header Profile treatment card
+            role = st.session_state.current_user["role"]
+            st.markdown(f"""
+            <div class="user-profile-badge">
+                <span style="font-size: 11px; font-weight: bold; color: #DC2626; letter-spacing: 1px; text-transform: uppercase;">● Active Session</span>
+                <div style="font-size: 18px; font-weight: 800; color: #1E293B; margin-top: 2px;">{st.session_state.current_user['username'].title()}</div>
+                <span style="font-size: 13px; color: #64748B; font-weight: 500;">Role: {role}</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Nav routing switches
             if st.button(lang["pos"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "pos"
             if st.button(lang["inv"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "inventory"
             if role in ["Owner", "Manager"]:
@@ -485,14 +535,18 @@ else:
                     
             # Language option placed cleanly underneath
             st.divider()
-            new_lang = st.selectbox("🌐 Language", ["English"], index=0, label_visibility="collapsed")
+            chosen_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
+            if chosen_lang != st.session_state.lang:
+                st.session_state.lang = chosen_lang
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
             
-            st.markdown("<br><br><br><br><br>", unsafe_allow_html=True)
+            # 🌟 FLEX CONTAINER BOTTOM ANCHOR BLOCK (NO GAP ERRORS) 🌟
+            st.markdown("<div>", unsafe_allow_html=True)
             st.divider()
-            
-            # Clean Logout button sitting alone at the absolute bottom
             if st.button(lang["logout"], use_container_width=True, type="primary"):
                 st.session_state["logged_in"] = False; st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
         pages = {"pos": pos, "inventory": inventory, "dashboard": dashboard, "staff": staff, "analytics": analytics}
         pages[st.session_state["current_page"]]()
