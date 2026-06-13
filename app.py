@@ -51,16 +51,16 @@ T = {
         "tot_prod": "మొత్తం ఉత్పత్తులు", "stock": "స్టాక్", "rev": "మొత్తం ఆదాయం",
         "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్",
         "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఫోటో అప్‌లోడ్", "save": "సేవ్ చేయండి",
-        "db": "📋 డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
+        "db": "📋 డేటాబేస్ (సవరించడానికి డబుల్ క్ಲಿక్ చేయండి)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
         "add": "జోడించు", "cart": "🧾 బండి", "empty": "బండి ఖాళీగా ఉంది",
         "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం",
-        "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు", "dl_pdf": "📄 PDFビルలు డౌన్‌లోడ్",
-        "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్ చేయండి"
+        "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
+        "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోಡించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్ చేయండి"
     }
 }
 
 # -----------------------------
-# 2. SYSTEM INIT & ACCURATE LIGHT THEME CSS
+# 2. SYSTEM INIT & SIDEBAR FONT CSS
 # -----------------------------
 def init_db():
     defaults = {
@@ -81,53 +81,13 @@ def get_base64_image(uploaded_file):
 init_db()
 lang = T[st.session_state.lang]
 
-# Target structural selectors to enforce visibility across text elements, inputs, and components
+# Clean CSS tweak just to make the navigation text larger and easier to see
 st.markdown("""
 <style>
-/* Force dark text color across standard paragraph layout formats */
-.stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label {
-    color: #0F172A !important;
-}
-
-/* Fix text input fields layout block */
-[data-testid="stTextField"] input, [data-testid="stNumberInput"] input, div[data-baseweb="select"] div {
-    background-color: #FFFFFF !important;
-    color: #0F172A !important;
-    opacity: 1 !important;
-}
-
-/* Fix data table/editor typography overlay color */
-div[data-testid="stTable"] table, div[role="grid"] div {
-    color: #0F172A !important;
-}
-
-/* Enlarge navigation elements font scale */
 [data-testid="stSidebar"] div[role="radiogroup"] label p {
     font-size: 1.25rem !important;
     font-weight: 600 !important;
-    color: #334155 !important;
-    padding: 6px 0px;
-}
-[data-testid="stSidebar"] div[role="radiogroup"] [data-checked="true"] p {
-    color: #4F46E5 !important;
-}
-
-/* Primary actions typography safety rule */
-button[kind="primary"] p, button[kind="primary"] span {
-    color: #FFFFFF !important;
-}
-
-/* Metric Display Adjustments */
-[data-testid="stMetricValue"] div { color: #0F172A !important; font-weight: 700 !important; }
-[data-testid="stMetricLabel"] p { color: #475569 !important; }
-
-/* Structural Content Card Framing */
-[data-testid="metric-container"] {
-    background: #FFFFFF !important; border: 1px solid #E2E8F0 !important; padding: 20px !important;
-    border-radius: 12px !important; border-top: 4px solid #4F46E5 !important;
-}
-div[data-testid="stVerticalBlock"] > div[style*="border"] {
-    background: #FFFFFF !important; border-color: #E2E8F0 !important; border-radius: 10px !important; padding: 15px !important;
+    padding: 4px 0px;
 }
 </style>
 """, unsafe_allow_html=True)
