@@ -5,30 +5,30 @@ import base64
 from datetime import datetime
 import streamlit.components.v1 as components
 
-# --- SAFETY CHECK FOR PDF LIBRARY ---
+# --- COMPULSORY LIBRARIES VALIDATION ---
 try:
     from fpdf import FPDF
     PDF_READY = True
 except ImportError:
     PDF_READY = False
 
-# --- BACKEND DATABASE INTEGRATION ---
-try:
-    from supabase import create_client
-    url = st.secrets.get("SUPABASE_URL", "")
-    key = st.secrets.get("SUPABASE_KEY", "")
-    if url and key:
-        db = create_client(url, key)
-        DB_CONNECTED = True
-    else:
-        DB_CONNECTED = False
-except Exception as e:
-    DB_CONNECTED = False
-
 st.set_page_config(page_title="Titan Convenience & Grocery", page_icon="🛒", layout="wide", initial_sidebar_state="expanded")
 
 # -----------------------------
-# 1. TRANSLATION DICTIONARY
+# 1. STRICT SUPABASE ENVIRONMENT CONNECTION
+# -----------------------------
+try:
+    from supabase import create_client
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    db = create_client(url, key)
+    DB_CONNECTED = True
+except Exception as e:
+    DB_CONNECTED = False
+    CONNECTION_ERROR = str(e)
+
+# -----------------------------
+# 2. TRANSLATION INTERFACE MAP
 # -----------------------------
 T = {
     "English": {
@@ -55,7 +55,7 @@ T = {
         "add": "जोड़ें", "cart": "🧾 कार्ट", "empty": "कार्ट खाली है",
         "sub": "उप-योग", "disc": "छूट", "tax": "कर", "tot": "कुल",
         "cust": "ग्राहक का नाम", "checkout": "💳 चेकआउट और बिल (PDF)", "dl_pdf": "📄 PDF बिल डाउनलोड करें",
-        "staff_name": "पूरा नाम", "role": "भूमিকা", "add_staff": "स्टाफ जोड़ें", "dl_csv": "📥 CSV डाउनलोड करें"
+        "staff_name": "पूरा नाम", "role": "भूमिका", "add_staff": "स्टाफ जोड़ें", "dl_csv": "📥 CSV डाउनलोड करें"
     },
     "Telugu": {
         "dash": "📊 డాష్‌బోర్డ్", "inv": "📦 ఇన్వెంటరీ", "pos": "🛒 విక్రయ కేంద్రం (POS)", 
@@ -73,7 +73,7 @@ T = {
 }
 
 # -----------------------------
-# 2. LOCAL STATE FALLBACK SETUP
+# 3. RUNTIME INITIALIZATION
 # -----------------------------
 if "logged_in" not in st.session_state: st.session_state["logged_in"] = False
 if "current_user" not in st.session_state: st.session_state["current_user"] = None
@@ -82,15 +82,9 @@ if "low_stock_threshold" not in st.session_state: st.session_state["low_stock_th
 if "cart" not in st.session_state: st.session_state["cart"] = []
 if "last_receipt" not in st.session_state: st.session_state["last_receipt"] = None
 
-# Local data backends if Supabase connection drops/fails
-if "local_inventory" not in st.session_state: st.session_state["local_inventory"] = pd.DataFrame(columns=["id", "sku", "name", "price", "quantity", "image"])
-if "local_sales" not in st.session_state: st.session_state["local_sales"] = pd.DataFrame(columns=["id", "customer", "total", "date_str"])
-if "local_staff" not in st.session_state: st.session_state["local_staff"] = pd.DataFrame(columns=["id", "name", "role"])
-if "local_users" not in st.session_state: st.session_state["local_users"] = {}
-
 lang = T[st.session_state.lang]
 
-# Style Fixes
+# Style Framework
 st.markdown("""
 <style>
 .stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label { color: #0F172A !important; }
@@ -106,20 +100,12 @@ div[data-testid="stVerticalBlock"] > div[style*="border"] { background: #FFFFFF 
 """, unsafe_allow_html=True)
 
 def fetch_inventory():
-    if DB_CONNECTED:
-        try:
-            res = db.table("inventory").select("*").execute()
-            return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "sku", "name", "price", "quantity", "image"])
-        except: pass
-    return st.session_state["local_inventory"]
+    res = db.table("inventory").select("*").execute()
+    return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "sku", "name", "price", "quantity", "image"])
 
 def fetch_sales_count():
-    if DB_CONNECTED:
-        try:
-            res = db.table("sales").select("*").execute()
-            return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "customer", "total", "date_str"])
-        except: pass
-    return st.session_state["local_sales"]
+    res = db.table("sales").select("*").execute()
+    return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "customer", "total", "date_str"])
 
 def get_base64_image(uploaded_file):
     if uploaded_file is not None:
@@ -128,7 +114,7 @@ def get_base64_image(uploaded_file):
     return None
 
 # -----------------------------
-# 3. PROFESSIONAL PDF GENERATOR
+# 4. INVOICE GENERATOR
 # -----------------------------
 def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, total):
     if not PDF_READY: return None
@@ -175,7 +161,7 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
     return bytes(pdf.output(dest='S'), 'latin-1')
 
 # -----------------------------
-# 4. PAGE ARCHITECTURES
+# 5. CORE INTERFACE PAGES
 # -----------------------------
 def dashboard():
     st.title(lang["dash"])
@@ -206,17 +192,8 @@ def inventory():
             if st.form_submit_button(lang["save"], type="primary") and name:
                 img_b64 = get_base64_image(img_file)
                 new_id = str(uuid.uuid4())[:8]
-                if DB_CONNECTED:
-                    try:
-                        db.table("inventory").insert({"id": new_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_b64}).execute()
-                        st.success("✅ Synced to Supabase Cloud!")
-                        st.rerun()
-                    except: pass
-                
-                # Local state fallback save
-                new_row = pd.DataFrame([{"id": new_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_b64}])
-                st.session_state["local_inventory"] = pd.concat([st.session_state["local_inventory"], new_row], ignore_index=True)
-                st.success("✅ Saved locally!")
+                db.table("inventory").insert({"id": new_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_b64}).execute()
+                st.success("✅ Added to Cloud Inventory!")
                 st.rerun()
 
     st.subheader(lang["db"])
@@ -226,18 +203,14 @@ def inventory():
             column_config={"id": None, "image": st.column_config.ImageColumn("Preview")}
         )
         if st.button("Save Table Changes", type="primary"):
-            if DB_CONNECTED:
-                try:
-                    for _, row in updated_df.iterrows():
-                        db.table("inventory").update({"sku": row['sku'], "name": row['name'], "price": row['price'], "quantity": row['quantity']}).eq("id", row['id']).execute()
-                except: pass
-            st.session_state["local_inventory"] = updated_df
+            for _, row in updated_df.iterrows():
+                db.table("inventory").update({"sku": row['sku'], "name": row['name'], "price": row['price'], "quantity": row['quantity']}).eq("id", row['id']).execute()
             st.rerun()
 
 def pos():
     st.title(lang["pos"])
     df_inv = fetch_inventory()
-    if df_inv.empty: st.warning("Inventory clear. Populate database tables first."); return
+    if df_inv.empty: st.warning("Inventory empty. Populate tables inside dashboard first."); return
 
     col1, col2 = st.columns([2.2, 1])
 
@@ -288,7 +261,7 @@ def pos():
                 st.markdown(f"### {lang['tot']}: ₹{total:,.2f}")
                 cust = st.text_input(lang["cust"], "Walk-in")
                 
-                # Custom Execution Dates
+                # --- BACKDATED TRANSACTION SELECTOR ---
                 st.divider()
                 st.markdown("##### 📅 Transaction Date & Time Adjustment")
                 tx_date = st.date_input("Execution Date", datetime.now())
@@ -299,22 +272,11 @@ def pos():
                 if st.button(lang["checkout"], type="primary", use_container_width=True):
                     s_id = str(uuid.uuid4())[:8].upper()
                     
-                    if DB_CONNECTED:
-                        try:
-                            for c_item in st.session_state.cart:
-                                current_stock = df_inv[df_inv['id'] == c_item['id']]['quantity'].values[0]
-                                db.table("inventory").update({"quantity": int(current_stock - c_item['quantity'])}).eq("id", c_item['id']).execute()
-                            db.table("sales").insert({"id": s_id, "customer": cust, "total": total, "date_str": d_str}).execute()
-                        except: pass
-                    
-                    # Local framework execution fallback
                     for c_item in st.session_state.cart:
-                        idx_list = st.session_state["local_inventory"].index[st.session_state["local_inventory"]['id'] == c_item['id']].tolist()
-                        if idx_list:
-                            st.session_state["local_inventory"].at[idx_list[0], 'quantity'] -= c_item['quantity']
+                        current_stock = df_inv[df_inv['id'] == c_item['id']]['quantity'].values[0]
+                        db.table("inventory").update({"quantity": int(current_stock - c_item['quantity'])}).eq("id", c_item['id']).execute()
                     
-                    new_sale_row = pd.DataFrame([{"id": s_id, "customer": cust, "total": total, "date_str": d_str}])
-                    st.session_state["local_sales"] = pd.concat([st.session_state["local_sales"], new_sale_row], ignore_index=True)
+                    db.table("sales").insert({"id": s_id, "customer": cust, "total": total, "date_str": d_str}).execute()
 
                     st.session_state.last_receipt = {
                         "id": s_id, "date": d_str, "cust": cust, "items": list(st.session_state.cart),
@@ -334,10 +296,10 @@ def pos():
             iframe_html = f"""
             <!DOCTYPE html><html><head><style>
                 body {{ font-family: monospace; color: #000; padding: 10px; background: #fff; }}
-                .container {{ border: 2px dashed #000; padding: 15px; max-width: 300px; margin: 0 auto; }}
-                .print-btn {{ width: 100%; padding: 10px; background: #4F46E5; color: white; border: none; border-radius: 4px; font-weight: bold; margin-top: 15px; cursor: pointer; }}
+                .container {{ border: 2px dashed #000; padding: 15px; max-width: 320px; margin: 0 auto; }}
+                .print-btn {{ width: 100%; padding: 12px; background: #4F46E5; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 20px; }}
                 .flex {{ display: flex; justify-content: space-between; }}
-                .line {{ border-bottom: 1px dashed #000; margin: 8px 0; }}
+                .line {{ border-bottom: 1px dashed #000; margin: 10px 0; }}
                 @media print {{ .print-btn {{ display: none !important; }} .container {{ border: none; }} }}
             </style></head><body>
                 <div class="container">
@@ -369,16 +331,10 @@ def staff():
             with st.form("add_co_owner", clear_on_submit=True):
                 new_username = st.text_input("Assign Co-Owner Username").strip().lower()
                 new_password = st.text_input("Assign Co-Owner Security Password", type="password")
-                
                 if st.form_submit_button("Grant Global Co-Ownership Rights", type="primary"):
                     if new_username and new_password:
-                        if DB_CONNECTED:
-                            try:
-                                db.table("users").insert({"username": new_username, "password_hash": new_password, "role": "Owner", "is_main": False}).execute()
-                                st.success(f"Successfully granted Administrative Co-Ownership to '{new_username}'")
-                            except: pass
-                        st.session_state["local_users"][new_username] = {"pass": new_password, "role": "Owner", "is_main": False}
-                        st.success(f"Successfully configured local fallback credential asset mapping parameters for '{new_username}'")
+                        db.table("users").insert({"username": new_username, "password_hash": new_password, "role": "Owner", "is_main": False}).execute()
+                        st.success(f"Successfully configured Co-Owner profile for '{new_username}' on Cloud Storage.")
                     else: st.error("Fields cannot be left blank.")
 
     with st.form("new_staff", clear_on_submit=True):
@@ -387,22 +343,11 @@ def staff():
         name = c1.text_input(lang["staff_name"])
         role = c2.selectbox(lang["role"], ["Cashier", "Manager"])
         if st.form_submit_button(lang["add_staff"], type="primary") and name:
-            new_id = str(uuid.uuid4())[:8]
-            if DB_CONNECTED:
-                try: db.table("staff_list").insert({"id": new_id, "name": name, "role": role}).execute()
-                except: pass
-            new_staff_row = pd.DataFrame([{"id": new_id, "name": name, "role": role}])
-            st.session_state["local_staff"] = pd.concat([st.session_state["local_staff"], new_staff_row], ignore_index=True)
+            db.table("staff_list").insert({"id": str(uuid.uuid4())[:8], "name": name, "role": role}).execute()
             st.rerun()
             
-    # Render unified list
-    if DB_CONNECTED:
-        try:
-            res = db.table("staff_list").select("*").execute()
-            if res.data: st.dataframe(pd.DataFrame(res.data), use_container_width=True, hide_index=True)
-            return
-        except: pass
-    st.dataframe(st.session_state["local_staff"], use_container_width=True, hide_index=True)
+    res = db.table("staff_list").select("*").execute()
+    if res.data: st.dataframe(pd.DataFrame(res.data), use_container_width=True, hide_index=True)
 
 def analytics():
     st.title(lang["analytics"])
@@ -414,69 +359,51 @@ def analytics():
     st.download_button(lang["dl_csv"], data=df_sales.to_csv(index=False).encode('utf-8'), file_name='sales_report.csv', type="primary")
 
 # -----------------------------
-# 5. AUTHENTICATION & OVERRIDE ROUTING
+# 6. ENFORCED CLOUD AUTHENTICATION LAYER
 # -----------------------------
-if not st.session_state["logged_in"]:
-    st.markdown("<br><br><h2 style='text-align: center;'> 💳 TITAN CONVENIENCE & GROCERY</h2>", unsafe_allow_html=True)
-    
-    # Connection Debugger Banner
-    if not DB_CONNECTED:
-        st.info("ℹ️ App running in Local Mode. Supabase configuration credentials pending verification.")
-        
-    c1, c2, c3 = st.columns([1, 1, 1])
-    with c2:
-        with st.container(border=True):
-            usr = st.text_input(lang["user"]).strip().lower()
-            pwd = st.text_input(lang["pass"], type="password")
-            if st.button(lang["login_btn"], type="primary", use_container_width=True):
-                
-                # 🌟 MASTER OVERRIDE SWITCH (Bypasses Supabase for you instantly)
-                if usr == "shanmukh" and pwd == "owner123":
-                    st.session_state["logged_in"] = True
-                    st.session_state["current_user"] = {"username": "shanmukh", "role": "Owner", "is_main": True}
-                    st.rerun()
-                
-                # Cloud Authentication Check
-                elif DB_CONNECTED:
-                    try:
-                        res = db.table("users").select("*").eq("username", usr).execute()
-                        if res.data and res.data[0]["password_hash"] == pwd:
-                            st.session_state["logged_in"] = True
-                            st.session_state["current_user"] = {"username": usr, "role": res.data[0]["role"], "is_main": res.data[0]["is_main"]}
-                            st.rerun()
-                    except: pass
-                
-                # Local Fallback user check
-                elif usr in st.session_state["local_users"] and st.session_state["local_users"][usr]["pass"] == pwd:
-                    st.session_state["logged_in"] = True
-                    st.session_state["current_user"] = {"username": usr, "role": "Owner", "is_main": False}
-                    st.rerun()
-                    
-                else: 
-                    st.error("Access Denied: Invalid Credentials.")
+if not DB_CONNECTED:
+    st.error("🛑 CRITICAL SERVER ERROR: Application fails to connect to cloud services.")
+    st.info(f"Diagnostic Error Output: {CONNECTION_ERROR}")
+    st.warning("Ensure SUPABASE_URL and SUPABASE_KEY configurations match your Deployed App Secrets Framework.")
 else:
-    with st.sidebar:
-        st.subheader("⚙️ Settings")
-        new_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
-        if new_lang != st.session_state.lang:
-            st.session_state.lang = new_lang
-            st.rerun()
+    if not st.session_state["logged_in"]:
+        st.markdown("<br><br><h2 style='text-align: center;'>🛒 TITAN CONVENIENCE & GROCERY</h2>", unsafe_allow_html=True)
+        c1, c2, c3 = st.columns([1, 1, 1])
+        with c2:
+            with st.container(border=True):
+                usr = st.text_input(lang["user"]).strip().lower()
+                pwd = st.text_input(lang["pass"], type="password")
+                if st.button(lang["login_btn"], type="primary", use_container_width=True):
+                    res = db.table("users").select("*").eq("username", usr).execute()
+                    if res.data and res.data[0]["password_hash"] == pwd:
+                        st.session_state["logged_in"] = True
+                        st.session_state["current_user"] = {"username": usr, "role": res.data[0]["role"], "is_main": res.data[0]["is_main"]}
+                        st.rerun()
+                    else: 
+                        st.error("Access Denied: Invalid Credentials.")
+    else:
+        with st.sidebar:
+            st.subheader("⚙️ Settings")
+            new_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
+            if new_lang != st.session_state.lang:
+                st.session_state.lang = new_lang
+                st.rerun()
+                
+            st.divider()
+            role = st.session_state.current_user["role"]
+            st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
+            st.divider()
             
-        st.divider()
-        role = st.session_state.current_user["role"]
-        st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
-        st.divider()
-        
-        menu_options = {lang["pos"]: pos, lang["inv"]: inventory}
-        if role in ["Owner", "Manager"]:
-            menu_options = {lang["dash"]: dashboard} | menu_options | {lang["staff"]: staff}
-        if role == "Owner":
-            menu_options[lang["analytics"]] = analytics
+            menu_options = {lang["pos"]: pos, lang["inv"]: inventory}
+            if role in ["Owner", "Manager"]:
+                menu_options = {lang["dash"]: dashboard} | menu_options | {lang["staff"]: staff}
+            if role == "Owner":
+                menu_options[lang["analytics"]] = analytics
 
-        choice = st.radio("Nav", list(menu_options.keys()), label_visibility="collapsed")
-        st.divider()
-        if st.button(lang["logout"], use_container_width=True):
-            st.session_state["logged_in"] = False
-            st.rerun()
+            choice = st.radio("Nav", list(menu_options.keys()), label_visibility="collapsed")
+            st.divider()
+            if st.button(lang["logout"], use_container_width=True):
+                st.session_state["logged_in"] = False
+                st.rerun()
 
-    menu_options[choice]()
+        menu_options[choice]()
