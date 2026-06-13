@@ -64,9 +64,9 @@ T = {
         "staff": "👥 సిబ్బంది & యూజర్ మేనేజ్మెంట్", "analytics": "📈 విశ్లేషణలు", "logout": "🚪 లాగ్ అవుట్",
         "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "మొత్తం ఉత్పత్తులు", "stock": "స్టాక్", "rev": "మొత్తం ఆదాయం",
-        "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉற்பత్తి పేరు", "sku": "బార్‌కోడ్",
+        "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్",
         "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఫోటో అప్‌లోడ్", "save": "సేవ్ చేయండి",
-        "db": "📋 డేటాబేస్ (సవరించడానికి డబుль క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
+        "db": "📋 డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
         "add": "జోడించు", "cart": "🧾 బండి", "empty": "బండి ఖాళీగా ఉంది",
         "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం",
         "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
@@ -87,15 +87,14 @@ if "current_page" not in st.session_state: st.session_state["current_page"] = "p
 
 lang = T[st.session_state.lang]
 
-# 🌟 CLEAN LIGHT-MODE NATIVE FIX CSS 🌟
+# 🌟 CLEAN LIGHT-MODE THEME OVERRIDES 🌟
 st.markdown("""
 <style>
-/* Clean text scaling adjustments for navigation action options */
-.nav-block-btn {
-    text-align: left; padding: 12px 16px; font-size: 1.2rem; font-weight: 600;
-    margin-bottom: 6px; border-radius: 8px; border: 1px solid #E2E8F0; background-color: #FFFFFF;
+/* Reset color conflict zones to allow Streamlit's native Light Mode engine to shine */
+.stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label { 
+    color: inherit; 
 }
-/* Ensure product image frame wrappers look perfectly uniform */
+/* Ensure product image frames fit perfectly inside catalog layouts */
 .product-card-img {
     border-radius: 8px; max-height: 140px; object-fit: cover; width: 100%;
 }
@@ -110,18 +109,15 @@ def fetch_sales_count():
     res = db.table("sales").select("*").execute()
     return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "customer", "total", "date_str"])
 
-# 🌟 AUTO-COMPRESSION PAYLOAD LOGIC TO PREVENT CRASHING 🌟
+# 🌟 AUTO-COMPRESSION LOGIC TO PREVENT PAYLOAD SIZE ERRORS 🌟
 def get_compressed_base64_image(uploaded_file):
     if uploaded_file is not None:
         try:
             image = Image.open(uploaded_file)
-            # Convert to standard RGB color spectrum mapping
             if image.mode in ("RGBA", "P"):
                 image = image.convert("RGB")
-            # Downscale image bounds to perfectly crisp dimensions
             image.thumbnail((300, 300))
             buffer = io.BytesIO()
-            # Compress image quality aggressively down to a light size footprint
             image.save(buffer, format="JPEG", quality=60)
             base64_str = base64.b64encode(buffer.getvalue()).decode()
             return f"data:image/jpeg;base64,{base64_str}"
@@ -206,10 +202,12 @@ def inventory():
             img_file = st.file_uploader(lang["upload"], type=["png", "jpg", "jpeg"])
             
             if st.form_submit_button(lang["save"], type="primary") and name:
-                # Compression safety layer execution
-                img_b64 = get_compressed_base64_image(img_file)
+                # 🌟 RUN AUTO-COMPRESSION LOGIC TO PROTECT DATABASE FROM DROPPING 🌟
+                img_compressed = get_compressed_base64_image(img_file)
                 new_id = str(uuid.uuid4())[:8]
-                db.table("inventory").insert({"id": new_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_b64}).execute()
+                
+                # Fixed line 212 mapping error right here:
+                db.table("inventory").insert({"id": new_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_compressed}).execute()
                 st.success("✅ Added to Inventory Database!")
                 st.rerun()
 
@@ -411,7 +409,7 @@ else:
             st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
             st.divider()
             
-            # 🌟 STABLE COMPONENT-BASED ROUTING SYSTEM 🌟
+            # Button Navigation Blocks
             if st.button(lang["pos"], use_container_width=True, type="secondary"):
                 st.session_state["current_page"] = "pos"
             if st.button(lang["inv"], use_container_width=True, type="secondary"):
