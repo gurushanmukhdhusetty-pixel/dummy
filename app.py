@@ -60,7 +60,7 @@ T = {
 }
 
 # -----------------------------
-# 2. SYSTEM INIT & DYNAMIC CSS
+# 2. SYSTEM INIT & FIXED CSS
 # -----------------------------
 def init_db():
     defaults = {
@@ -81,28 +81,42 @@ def get_base64_image(uploaded_file):
 init_db()
 lang = T[st.session_state.lang]
 
-# Dynamic Theme CSS
+# Fix: Aggressive Dynamic CSS to force text visibility
 bg_color = "#121212" if st.session_state.dark_mode else "#F8FAFC"
 card_bg = "#1E1E1E" if st.session_state.dark_mode else "#ffffff"
-text_color = "#E0E0E0" if st.session_state.dark_mode else "#1e293b"
+text_color = "#EFEFEF" if st.session_state.dark_mode else "#1e293b"
 border_color = "#333333" if st.session_state.dark_mode else "#e2e8f0"
 
 st.markdown(f"""
 <style>
-.stApp {{ background-color: {bg_color}; color: {text_color}; }}
+/* Core Backgrounds */
+.stApp {{ background-color: {bg_color}; }}
+[data-testid="stSidebar"] {{ background-color: {card_bg}; }}
+
+/* Force Typography Visibility */
+.stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown span {{
+    color: {text_color} !important;
+}}
+label, [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
+    color: {text_color} !important;
+}}
+
+/* Protect Primary Buttons */
+.stButton>button[kind="primary"] p, .stButton>button[kind="primary"] span {{
+    color: white !important;
+}}
+
+/* Styled Containers */
 [data-testid="metric-container"] {{
     background: {card_bg}; border: 1px solid {border_color}; padding: 20px;
-    border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 4px solid #4F46E5;
+    border-radius: 12px; border-top: 4px solid #4F46E5;
 }}
 div[data-testid="stVerticalBlock"] > div[style*="border"] {{
     background: {card_bg}; border-color: {border_color}; border-radius: 10px; padding: 15px;
 }}
-.receipt-box {{
-    background: {'#fdfdfd' if not st.session_state.dark_mode else '#1e1e1e'};
-    color: {'#000' if not st.session_state.dark_mode else '#fff'};
-    font-family: monospace; padding: 20px; border: 2px dashed {'#ccc' if not st.session_state.dark_mode else '#555'};
-    border-radius: 8px; max-width: 400px; margin: 0 auto;
-}}
+
+/* Inputs */
+input {{ color: {text_color} !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -114,17 +128,14 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
     pdf = FPDF()
     pdf.add_page()
     
-    # Page Border
     pdf.rect(5, 5, 200, 287)
     
-    # Header
     pdf.set_font("Arial", 'B', 22)
     pdf.cell(190, 15, "SHANMUKH ENTERPRISES", ln=True, align='C')
     pdf.set_font("Arial", 'I', 10)
     pdf.cell(190, 5, "Official Retail Invoice", ln=True, align='C')
     pdf.ln(5)
     
-    # Invoice Details
     pdf.set_font("Arial", '', 10)
     pdf.cell(95, 6, f"Invoice No: {sale_id}", 0, 0)
     pdf.cell(95, 6, f"Date: {date_str}", 0, 1, 'R')
@@ -133,13 +144,11 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
     pdf.line(10, 45, 200, 45)
     pdf.ln(5)
     
-    # Table Header
     pdf.set_font("Arial", 'B', 11)
     pdf.cell(90, 8, "Item Description", 1, 0, 'C')
     pdf.cell(30, 8, "Qty", 1, 0, 'C')
     pdf.cell(70, 8, "Amount (Rs)", 1, 1, 'C')
     
-    # Table Content
     pdf.set_font("Arial", '', 10)
     for item in cart:
         clean_name = item['name'].encode('ascii', 'ignore').decode('ascii')[:30]
@@ -150,28 +159,17 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
         
     pdf.ln(5)
     
-    # Summary
     pdf.set_font("Arial", '', 11)
-    pdf.cell(120, 6, "", 0, 0)
-    pdf.cell(35, 6, "Subtotal:", 0, 0, 'R')
-    pdf.cell(35, 6, f"{subtotal:,.2f} ", 0, 1, 'R')
-    
+    pdf.cell(120, 6, "", 0, 0); pdf.cell(35, 6, "Subtotal:", 0, 0, 'R'); pdf.cell(35, 6, f"{subtotal:,.2f} ", 0, 1, 'R')
     if discount > 0:
-        pdf.cell(120, 6, "", 0, 0)
-        pdf.cell(35, 6, "Discount:", 0, 0, 'R')
-        pdf.cell(35, 6, f"-{discount:,.2f} ", 0, 1, 'R')
-        
-    pdf.cell(120, 6, "", 0, 0)
-    pdf.cell(35, 6, "Tax (5%):", 0, 0, 'R')
-    pdf.cell(35, 6, f"+{tax:,.2f} ", 0, 1, 'R')
+        pdf.cell(120, 6, "", 0, 0); pdf.cell(35, 6, "Discount:", 0, 0, 'R'); pdf.cell(35, 6, f"-{discount:,.2f} ", 0, 1, 'R')
+    pdf.cell(120, 6, "", 0, 0); pdf.cell(35, 6, "Tax (5%):", 0, 0, 'R'); pdf.cell(35, 6, f"+{tax:,.2f} ", 0, 1, 'R')
     
     pdf.line(130, pdf.get_y(), 200, pdf.get_y())
     pdf.ln(2)
     
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(120, 8, "", 0, 0)
-    pdf.cell(35, 8, "GRAND TOTAL:", 0, 0, 'R')
-    pdf.cell(35, 8, f"{total:,.2f} ", 0, 1, 'R')
+    pdf.cell(120, 8, "", 0, 0); pdf.cell(35, 8, "GRAND TOTAL:", 0, 0, 'R'); pdf.cell(35, 8, f"{total:,.2f} ", 0, 1, 'R')
     
     pdf.ln(15)
     pdf.set_font("Arial", 'I', 10)
@@ -237,7 +235,7 @@ def pos():
                     if pd.notna(row.get('image')) and row['image']: 
                         st.image(row['image'], use_container_width=True)
                     st.markdown(f"**{row['name']}**")
-                    color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else ("#E0E0E0" if st.session_state.dark_mode else "gray")
+                    color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else ("#A0A0A0" if st.session_state.dark_mode else "gray")
                     st.markdown(f"<span style='color:{color}'>{lang['stock']}: {row['quantity']}</span>", unsafe_allow_html=True)
                     st.markdown(f"#### ₹{row['price']:,.2f}")
                     
@@ -283,7 +281,6 @@ def pos():
 
                     st.session_state.sales.append({"id": s_id, "customer": cust, "total": total, "date": d_str})
                     
-                    # Store receipt data for On-Screen rendering
                     st.session_state.last_receipt = {
                         "id": s_id, "date": d_str, "cust": cust, "items": list(st.session_state.cart),
                         "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total
@@ -293,39 +290,35 @@ def pos():
                         pdf_file = generate_pdf(s_id, d_str, cust, st.session_state.cart, subtotal, disc_amt, tax_amt, total)
                         st.session_state['pdf'] = pdf_file
                         st.session_state['pdf_name'] = f"Invoice_{s_id}.pdf"
-                    else:
-                        st.error("⚠️ Error: 'fpdf' missing. Check requirements.txt")
 
                     st.session_state.cart.clear()
                     st.rerun()
 
-        # Render On-Screen Receipt
         if st.session_state.last_receipt:
             r = st.session_state.last_receipt
             items_html = "".join([f"<div>{i['quantity']}x {i['name'][:15]} <span style='float:right'>₹{i['subtotal']:,.2f}</span></div>" for i in r['items']])
             
+            # Inline styled receipt to protect from dark/light themes
             receipt_html = f"""
-            <div id="print-area" class="receipt-box">
-                <h3 style="text-align:center; margin-top:0;">SHANMUKH ENTERPRISES</h3>
-                <div style="border-bottom:1px dashed currentcolor; margin-bottom:10px;"></div>
+            <div style="background:{card_bg}; color:{text_color}; font-family:monospace; padding:20px; border:2px dashed {border_color}; border-radius:8px; max-width:400px; margin:0 auto;">
+                <h3 style="text-align:center; margin-top:0; color:{text_color};">SHANMUKH ENTERPRISES</h3>
+                <div style="border-bottom:1px dashed {border_color}; margin-bottom:10px;"></div>
                 <div><b>Bill No:</b> {r['id']}</div>
                 <div><b>Date:</b> {r['date']}</div>
                 <div><b>Customer:</b> {r['cust']}</div>
-                <div style="border-bottom:1px dashed currentcolor; margin:10px 0;"></div>
+                <div style="border-bottom:1px dashed {border_color}; margin:10px 0;"></div>
                 {items_html}
-                <div style="border-bottom:1px dashed currentcolor; margin:10px 0;"></div>
+                <div style="border-bottom:1px dashed {border_color}; margin:10px 0;"></div>
                 <div>Subtotal: <span style="float:right">₹{r['sub']:,.2f}</span></div>
                 <div>Discount: <span style="float:right">-₹{r['disc']:,.2f}</span></div>
                 <div>Tax (5%): <span style="float:right">+₹{r['tax']:,.2f}</span></div>
-                <h3 style="margin-bottom:0;">TOTAL: <span style="float:right">₹{r['tot']:,.2f}</span></h3>
+                <h3 style="margin-bottom:0; color:{text_color};">TOTAL: <span style="float:right">₹{r['tot']:,.2f}</span></h3>
                 <div style="text-align:center; margin-top:15px; font-size:12px;">Thank you!</div>
             </div>
             """
             st.markdown(receipt_html, unsafe_allow_html=True)
 
             c_btn1, c_btn2 = st.columns(2)
-            
-            # Browser Print Button (JavaScript)
             with c_btn1:
                 components.html("""
                     <button onclick="window.parent.print()" 
@@ -333,8 +326,6 @@ def pos():
                     🖨️ Print Receipt
                     </button>
                 """, height=50)
-
-            # PDF Download Button
             with c_btn2:
                 if 'pdf' in st.session_state:
                     st.download_button(lang["dl_pdf"], data=st.session_state['pdf'], file_name=st.session_state['pdf_name'], mime="application/pdf", type="primary", use_container_width=True)
@@ -378,14 +369,11 @@ if not st.session_state.logged_in:
 else:
     with st.sidebar:
         st.subheader("⚙️ Settings")
-        
-        # Dark Mode Toggle
         dark = st.toggle("🌙 Dark Mode", value=st.session_state.dark_mode)
         if dark != st.session_state.dark_mode:
             st.session_state.dark_mode = dark
             st.rerun()
             
-        # Language Dropdown
         new_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
         if new_lang != st.session_state.lang:
             st.session_state.lang = new_lang
