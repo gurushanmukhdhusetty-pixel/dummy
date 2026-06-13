@@ -3,6 +3,7 @@ import pandas as pd
 import uuid
 import base64
 from datetime import datetime
+import streamlit.components.v1 as components
 
 # --- SAFETY CHECK FOR PDF LIBRARY ---
 try:
@@ -27,7 +28,7 @@ T = {
         "db": "📋 Live Database (Double-click to edit)", "search": "🔍 Search Products...",
         "add": "Add", "cart": "🧾 Current Cart", "empty": "Cart is Empty",
         "sub": "Subtotal", "disc": "Discount", "tax": "Tax", "tot": "Total",
-        "cust": "Customer Name", "checkout": "💳 Checkout & Generate PDF", "dl_pdf": "📄 Download PDF Bill",
+        "cust": "Customer Name", "checkout": "💳 Checkout & Generate Bill", "dl_pdf": "📄 Download PDF Bill",
         "staff_name": "Full Name", "role": "Role", "add_staff": "Add Staff Member", "dl_csv": "📥 Export CSV"
     },
     "Hindi": {
@@ -53,20 +54,20 @@ T = {
         "db": "📋 డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
         "add": "జోడించు", "cart": "🧾 బండి", "empty": "బండి ఖాళీగా ఉంది",
         "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం",
-        "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు (PDF)", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
+        "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
         "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్ చేయండి"
     }
 }
 
 # -----------------------------
-# 2. SYSTEM INIT & HELPERS
+# 2. SYSTEM INIT & DYNAMIC CSS
 # -----------------------------
 def init_db():
     defaults = {
         "users": {"shanmukh": {"pass": "owner123", "role": "Owner"}, "staff": {"pass": "staff123", "role": "Staff"}},
-        "logged_in": False, "current_user": None, "lang": "English", "low_stock_threshold": 5,
+        "logged_in": False, "current_user": None, "lang": "English", "dark_mode": False, "low_stock_threshold": 5,
         "inventory": pd.DataFrame(columns=["id", "sku", "name", "price", "quantity", "image"]),
-        "cart": [], "sales": [], "staff_list": []
+        "cart": [], "sales": [], "staff_list": [], "last_receipt": None
     }
     for k, v in defaults.items():
         if k not in st.session_state: st.session_state[k] = v
@@ -80,43 +81,103 @@ def get_base64_image(uploaded_file):
 init_db()
 lang = T[st.session_state.lang]
 
+# Dynamic Theme CSS
+bg_color = "#121212" if st.session_state.dark_mode else "#F8FAFC"
+card_bg = "#1E1E1E" if st.session_state.dark_mode else "#ffffff"
+text_color = "#E0E0E0" if st.session_state.dark_mode else "#1e293b"
+border_color = "#333333" if st.session_state.dark_mode else "#e2e8f0"
+
+st.markdown(f"""
+<style>
+.stApp {{ background-color: {bg_color}; color: {text_color}; }}
+[data-testid="metric-container"] {{
+    background: {card_bg}; border: 1px solid {border_color}; padding: 20px;
+    border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 4px solid #4F46E5;
+}}
+div[data-testid="stVerticalBlock"] > div[style*="border"] {{
+    background: {card_bg}; border-color: {border_color}; border-radius: 10px; padding: 15px;
+}}
+.receipt-box {{
+    background: {'#fdfdfd' if not st.session_state.dark_mode else '#1e1e1e'};
+    color: {'#000' if not st.session_state.dark_mode else '#fff'};
+    font-family: monospace; padding: 20px; border: 2px dashed {'#ccc' if not st.session_state.dark_mode else '#555'};
+    border-radius: 8px; max-width: 400px; margin: 0 auto;
+}}
+</style>
+""", unsafe_allow_html=True)
+
 # -----------------------------
-# 3. STRICT PDF GENERATOR
+# 3. PROFESSIONAL PDF GENERATOR
 # -----------------------------
 def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, total):
     if not PDF_READY: return None
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(190, 10, "SHANMUKH ENTERPRISES", ln=True, align='C')
-    pdf.set_font("Arial", '', 10)
-    pdf.cell(190, 5, "========================================", ln=True, align='C')
-    pdf.cell(190, 5, f"Bill ID: {sale_id}  |  Date: {date_str}", ln=True)
-    pdf.cell(190, 5, f"Customer: {customer}", ln=True)
-    pdf.cell(190, 5, "----------------------------------------------------------------", ln=True)
     
-    pdf.set_font("Arial", 'B', 10)
-    pdf.cell(90, 5, "Item", 0, 0); pdf.cell(30, 5, "Qty", 0, 0, 'C'); pdf.cell(70, 5, "Price", 0, 1, 'R')
-    pdf.set_font("Arial", '', 10)
-    pdf.cell(190, 5, "----------------------------------------------------------------", ln=True)
+    # Page Border
+    pdf.rect(5, 5, 200, 287)
     
+    # Header
+    pdf.set_font("Arial", 'B', 22)
+    pdf.cell(190, 15, "SHANMUKH ENTERPRISES", ln=True, align='C')
+    pdf.set_font("Arial", 'I', 10)
+    pdf.cell(190, 5, "Official Retail Invoice", ln=True, align='C')
+    pdf.ln(5)
+    
+    # Invoice Details
+    pdf.set_font("Arial", '', 10)
+    pdf.cell(95, 6, f"Invoice No: {sale_id}", 0, 0)
+    pdf.cell(95, 6, f"Date: {date_str}", 0, 1, 'R')
+    pdf.cell(190, 6, f"Customer: {customer}", 0, 1)
+    
+    pdf.line(10, 45, 200, 45)
+    pdf.ln(5)
+    
+    # Table Header
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(90, 8, "Item Description", 1, 0, 'C')
+    pdf.cell(30, 8, "Qty", 1, 0, 'C')
+    pdf.cell(70, 8, "Amount (Rs)", 1, 1, 'C')
+    
+    # Table Content
+    pdf.set_font("Arial", '', 10)
     for item in cart:
-        clean_name = item['name'].encode('ascii', 'ignore').decode('ascii')[:25]
+        clean_name = item['name'].encode('ascii', 'ignore').decode('ascii')[:30]
         if not clean_name: clean_name = "Retail Item"
-        pdf.cell(90, 5, clean_name, 0, 0)
-        pdf.cell(30, 5, str(item['quantity']), 0, 0, 'C')
-        pdf.cell(70, 5, f"Rs. {item['subtotal']:,.2f}", 0, 1, 'R')
+        pdf.cell(90, 8, f" {clean_name}", 1, 0)
+        pdf.cell(30, 8, str(item['quantity']), 1, 0, 'C')
+        pdf.cell(70, 8, f"{item['subtotal']:,.2f} ", 1, 1, 'R')
         
-    pdf.cell(190, 5, "----------------------------------------------------------------", ln=True)
-    pdf.cell(120, 5, "", 0, 0); pdf.cell(35, 5, "Subtotal:", 0, 0); pdf.cell(35, 5, f"Rs. {subtotal:,.2f}", 0, 1, 'R')
+    pdf.ln(5)
+    
+    # Summary
+    pdf.set_font("Arial", '', 11)
+    pdf.cell(120, 6, "", 0, 0)
+    pdf.cell(35, 6, "Subtotal:", 0, 0, 'R')
+    pdf.cell(35, 6, f"{subtotal:,.2f} ", 0, 1, 'R')
+    
     if discount > 0:
-        pdf.cell(120, 5, "", 0, 0); pdf.cell(35, 5, "Discount:", 0, 0); pdf.cell(35, 5, f"-Rs. {discount:,.2f}", 0, 1, 'R')
-    pdf.cell(120, 5, "", 0, 0); pdf.cell(35, 5, "Tax (5%):", 0, 0); pdf.cell(35, 5, f"+Rs. {tax:,.2f}", 0, 1, 'R')
+        pdf.cell(120, 6, "", 0, 0)
+        pdf.cell(35, 6, "Discount:", 0, 0, 'R')
+        pdf.cell(35, 6, f"-{discount:,.2f} ", 0, 1, 'R')
+        
+    pdf.cell(120, 6, "", 0, 0)
+    pdf.cell(35, 6, "Tax (5%):", 0, 0, 'R')
+    pdf.cell(35, 6, f"+{tax:,.2f} ", 0, 1, 'R')
     
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(120, 8, "", 0, 0); pdf.cell(35, 8, "TOTAL:", 0, 0); pdf.cell(35, 8, f"Rs. {total:,.2f}", 0, 1, 'R')
+    pdf.line(130, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(2)
     
-    # Safe byte conversion
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(120, 8, "", 0, 0)
+    pdf.cell(35, 8, "GRAND TOTAL:", 0, 0, 'R')
+    pdf.cell(35, 8, f"{total:,.2f} ", 0, 1, 'R')
+    
+    pdf.ln(15)
+    pdf.set_font("Arial", 'I', 10)
+    pdf.cell(190, 5, "Thank you for your business!", ln=True, align='C')
+    pdf.cell(190, 5, "Authorized Signatory", ln=True, align='R')
+    
     return bytes(pdf.output(dest='S'), 'latin-1')
 
 # -----------------------------
@@ -155,10 +216,7 @@ def inventory():
     if not st.session_state.inventory.empty:
         st.session_state.inventory = st.data_editor(
             st.session_state.inventory, use_container_width=True, hide_index=True, num_rows="dynamic",
-            column_config={
-                "id": None, 
-                "image": st.column_config.ImageColumn("Preview")
-            }
+            column_config={"id": None, "image": st.column_config.ImageColumn("Preview")}
         )
 
 def pos():
@@ -179,7 +237,7 @@ def pos():
                     if pd.notna(row.get('image')) and row['image']: 
                         st.image(row['image'], use_container_width=True)
                     st.markdown(f"**{row['name']}**")
-                    color = "red" if row['quantity'] <= st.session_state.low_stock_threshold else "gray"
+                    color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else ("#E0E0E0" if st.session_state.dark_mode else "gray")
                     st.markdown(f"<span style='color:{color}'>{lang['stock']}: {row['quantity']}</span>", unsafe_allow_html=True)
                     st.markdown(f"#### ₹{row['price']:,.2f}")
                     
@@ -188,8 +246,7 @@ def pos():
                         if row['quantity'] >= qty:
                             item = next((i for i in st.session_state.cart if i["id"] == row["id"]), None)
                             if item:
-                                item["quantity"] += qty
-                                item["subtotal"] = item["price"] * item["quantity"]
+                                item["quantity"] += qty; item["subtotal"] = item["price"] * item["quantity"]
                             else:
                                 st.session_state.cart.append({"id": row["id"], "name": row["name"], "price": row["price"], "quantity": qty, "subtotal": row["price"] * qty})
                             st.rerun()
@@ -226,18 +283,61 @@ def pos():
 
                     st.session_state.sales.append({"id": s_id, "customer": cust, "total": total, "date": d_str})
                     
+                    # Store receipt data for On-Screen rendering
+                    st.session_state.last_receipt = {
+                        "id": s_id, "date": d_str, "cust": cust, "items": list(st.session_state.cart),
+                        "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total
+                    }
+
                     if PDF_READY:
                         pdf_file = generate_pdf(s_id, d_str, cust, st.session_state.cart, subtotal, disc_amt, tax_amt, total)
                         st.session_state['pdf'] = pdf_file
-                        st.session_state['pdf_name'] = f"bill_{s_id}.pdf"
+                        st.session_state['pdf_name'] = f"Invoice_{s_id}.pdf"
                     else:
-                        st.error("⚠️ Error: 'fpdf' library missing. Check requirements.txt")
+                        st.error("⚠️ Error: 'fpdf' missing. Check requirements.txt")
 
                     st.session_state.cart.clear()
                     st.rerun()
 
-        if 'pdf' in st.session_state:
-            st.download_button(lang["dl_pdf"], data=st.session_state['pdf'], file_name=st.session_state['pdf_name'], mime="application/pdf", type="primary", use_container_width=True)
+        # Render On-Screen Receipt
+        if st.session_state.last_receipt:
+            r = st.session_state.last_receipt
+            items_html = "".join([f"<div>{i['quantity']}x {i['name'][:15]} <span style='float:right'>₹{i['subtotal']:,.2f}</span></div>" for i in r['items']])
+            
+            receipt_html = f"""
+            <div id="print-area" class="receipt-box">
+                <h3 style="text-align:center; margin-top:0;">SHANMUKH ENTERPRISES</h3>
+                <div style="border-bottom:1px dashed currentcolor; margin-bottom:10px;"></div>
+                <div><b>Bill No:</b> {r['id']}</div>
+                <div><b>Date:</b> {r['date']}</div>
+                <div><b>Customer:</b> {r['cust']}</div>
+                <div style="border-bottom:1px dashed currentcolor; margin:10px 0;"></div>
+                {items_html}
+                <div style="border-bottom:1px dashed currentcolor; margin:10px 0;"></div>
+                <div>Subtotal: <span style="float:right">₹{r['sub']:,.2f}</span></div>
+                <div>Discount: <span style="float:right">-₹{r['disc']:,.2f}</span></div>
+                <div>Tax (5%): <span style="float:right">+₹{r['tax']:,.2f}</span></div>
+                <h3 style="margin-bottom:0;">TOTAL: <span style="float:right">₹{r['tot']:,.2f}</span></h3>
+                <div style="text-align:center; margin-top:15px; font-size:12px;">Thank you!</div>
+            </div>
+            """
+            st.markdown(receipt_html, unsafe_allow_html=True)
+
+            c_btn1, c_btn2 = st.columns(2)
+            
+            # Browser Print Button (JavaScript)
+            with c_btn1:
+                components.html("""
+                    <button onclick="window.parent.print()" 
+                    style="width:100%; padding:10px; background:#4F46E5; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">
+                    🖨️ Print Receipt
+                    </button>
+                """, height=50)
+
+            # PDF Download Button
+            with c_btn2:
+                if 'pdf' in st.session_state:
+                    st.download_button(lang["dl_pdf"], data=st.session_state['pdf'], file_name=st.session_state['pdf_name'], mime="application/pdf", type="primary", use_container_width=True)
 
 def staff():
     st.title(lang["staff"])
@@ -277,16 +377,25 @@ if not st.session_state.logged_in:
                 else: st.error("Error")
 else:
     with st.sidebar:
-        new_lang = st.selectbox("🌐 Language / भाषा / భాష", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
+        st.subheader("⚙️ Settings")
+        
+        # Dark Mode Toggle
+        dark = st.toggle("🌙 Dark Mode", value=st.session_state.dark_mode)
+        if dark != st.session_state.dark_mode:
+            st.session_state.dark_mode = dark
+            st.rerun()
+            
+        # Language Dropdown
+        new_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
         if new_lang != st.session_state.lang:
             st.session_state.lang = new_lang
             st.rerun()
             
+        st.divider()
         role = st.session_state.current_user["role"]
         st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
         st.divider()
         
-        # Build strict single-menu routing
         menu_options = {lang["pos"]: pos, lang["inv"]: inventory}
         if role == "Owner" or role == "Manager":
             menu_options = {lang["dash"]: dashboard} | menu_options | {lang["staff"]: staff}
@@ -299,5 +408,4 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    # Execute the selected page
     menu_options[choice]()
