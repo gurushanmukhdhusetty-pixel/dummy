@@ -12,7 +12,7 @@ try:
 except ImportError:
     PDF_READY = False
 
-st.set_page_config(page_title="Titan Convenience & Grocery", page_icon="🛒", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Titan Inventory & POS System", page_icon="🛒", layout="wide", initial_sidebar_state="expanded")
 
 # -----------------------------
 # 1. STRICT SUPABASE ENVIRONMENT CONNECTION
@@ -62,7 +62,7 @@ T = {
         "staff": "👥 సిబ్బంది & యూజర్ మేనేజ్మెంట్", "analytics": "📈 విశ్లేషణలు", "logout": "🚪 లాగ్ అవుట్",
         "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "మొత్తం ఉత్పత్తులు", "stock": "స్టాక్", "rev": "మొత్తం ఆదాయం",
-        "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్",
+        "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉற்பత్తి పేరు", "sku": "బార్‌కోడ్",
         "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఫోటో అప్‌లోడ్", "save": "సేవ్ చేయండి",
         "db": "📋 డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
         "add": "జోడించు", "cart": "🧾 బండి", "empty": "బండి ఖాళీగా ఉంది",
@@ -84,18 +84,63 @@ if "last_receipt" not in st.session_state: st.session_state["last_receipt"] = No
 
 lang = T[st.session_state.lang]
 
-# Style Framework
+# 🌟 PREMIUM CRISP LIGHT MODE UI STYLING FIX 🌟
 st.markdown("""
 <style>
-.stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label { color: #0F172A !important; }
-[data-testid="stTextField"] input, [data-testid="stNumberInput"] input, div[data-baseweb="select"] div, [data-testid="stDateTimeInput"] input { background-color: #FFFFFF !important; color: #0F172A !important; opacity: 1 !important; }
-div[data-testid="stTable"] table, div[role="grid"] div { color: #0F172A !important; }
-[data-testid="stSidebar"] div[role="radiogroup"] label p { font-size: 1.25rem !important; font-weight: 600 !important; color: #334155 !important; padding: 4px 0px; }
-[data-testid="stSidebar"] div[role="radiogroup"] [data-checked="true"] p { color: #4F46E5 !important; }
-button[kind="primary"] p, button[kind="primary"] span { color: #FFFFFF !important; }
-[data-testid="stMetricValue"] div { color: #0F172A !important; font-weight: 700 !important; }
-[data-testid="metric-container"] { background: #FFFFFF !important; border: 1px solid #E2E8F0 !important; padding: 20px !important; border-radius: 12px !important; border-top: 4px solid #4F46E5 !important; }
-div[data-testid="stVerticalBlock"] > div[style*="border"] { background: #FFFFFF !important; border-color: #E2E8F0 !important; border-radius: 10px !important; padding: 15px !important; }
+/* Enforce light background and crisp dark slate text across elements */
+.stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label { 
+    color: #0F172A !important; 
+}
+
+/* Force pure high-contrast visibility inside input containers */
+div[data-baseweb="input"] input, div[data-baseweb="input"] textarea, .stNumberInput input, .stTextInput input, .stDateInput input {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 6px !important;
+}
+
+/* Fix dropdown selection menu visibility */
+div[data-baseweb="select"] {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+}
+
+/* Enforce table text contrast */
+div[data-testid="stTable"] table, div[role="grid"] div, .stDataFrame div { 
+    color: #0F172A !important; 
+}
+
+/* Navigation bar clean layout formatting */
+[data-testid="stSidebar"] div[role="radiogroup"] label p { 
+    font-size: 1.25rem !important; 
+    font-weight: 600 !important; 
+    color: #334155 !important; 
+    padding: 4px 0px; 
+}
+[data-testid="stSidebar"] div[role="radiogroup"] [data-checked="true"] p { 
+    color: #4F46E5 !important; 
+}
+
+/* Primary buttons text preservation */
+button[kind="primary"] p, button[kind="primary"] span { 
+    color: #FFFFFF !important; 
+}
+
+/* Framework containers padding */
+[data-testid="metric-container"] { 
+    background: #FFFFFF !important; 
+    border: 1px solid #E2E8F0 !important; 
+    padding: 20px !important; 
+    border-radius: 12px !important; 
+    border-top: 4px solid #4F46E5 !important; 
+}
+div[data-testid="stVerticalBlock"] > div[style*="border"] { 
+    background: #FFFFFF !important; 
+    border-color: #E2E8F0 !important; 
+    border-radius: 10px !important; 
+    padding: 15px !important; 
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -193,7 +238,7 @@ def inventory():
                 img_b64 = get_base64_image(img_file)
                 new_id = str(uuid.uuid4())[:8]
                 db.table("inventory").insert({"id": new_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_b64}).execute()
-                st.success("✅ Added to Cloud Inventory!")
+                st.success("✅ Added to Inventory Database!")
                 st.rerun()
 
     st.subheader(lang["db"])
@@ -324,17 +369,19 @@ def pos():
 
 def staff():
     st.title(lang["staff"])
-    is_main_owner = st.session_state.current_user.get("is_main", False)
+    
+    # 🌟 SECURE PRIVILEGES: RESTRICTED STLY TO MAIN MASTER ACCOUNT (shanmukh) 🌟
+    is_main_owner = st.session_state.current_user.get("is_main", False) or st.session_state.current_user.get("username") == "shanmukh"
     
     if is_main_owner:
-        with st.expander("👑 Primary Administrative Privilege: Add Co-Owners", expanded=True):
-            with st.form("add_co_owner", clear_on_submit=True):
-                new_username = st.text_input("Assign Co-Owner Username").strip().lower()
-                new_password = st.text_input("Assign Co-Owner Security Password", type="password")
-                if st.form_submit_button("Grant Global Co-Ownership Rights", type="primary"):
+        with st.expander("👑 Primary Administrative Privilege: Add Sub-Owners", expanded=True):
+            with st.form("add_sub_owner", clear_on_submit=True):
+                new_username = st.text_input("Assign Sub-Owner Username").strip().lower()
+                new_password = st.text_input("Assign Sub-Owner Security Password", type="password")
+                if st.form_submit_button("Grant Administrative Access", type="primary"):
                     if new_username and new_password:
                         db.table("users").insert({"username": new_username, "password_hash": new_password, "role": "Owner", "is_main": False}).execute()
-                        st.success(f"Successfully configured Co-Owner profile for '{new_username}' on Cloud Storage.")
+                        st.success(f"Successfully configured Sub-Owner profile for '{new_username}'")
                     else: st.error("Fields cannot be left blank.")
 
     with st.form("new_staff", clear_on_submit=True):
@@ -352,7 +399,7 @@ def staff():
 def analytics():
     st.title(lang["analytics"])
     df_sales = fetch_sales_count()
-    if df_sales.empty: st.info("No sales logs found inside cloud tables."); return
+    if df_sales.empty: st.info("No sales logs found."); return
     
     df_sales['date_only'] = pd.to_datetime(df_sales['date_str']).dt.date
     st.bar_chart(df_sales.groupby('date_only')['total'].sum(), color="#4F46E5")
@@ -367,7 +414,7 @@ if not DB_CONNECTED:
     st.warning("Ensure SUPABASE_URL and SUPABASE_KEY configurations match your Deployed App Secrets Framework.")
 else:
     if not st.session_state["logged_in"]:
-        st.markdown("<br><br><h2 style='text-align: center;'>🛒 TITAN CONVENIENCE & GROCERY</h2>", unsafe_allow_html=True)
+        st.markdown("<br><br><h2 style='text-align: center;'>🏬 Titan Inventory & POS System</h2>", unsafe_allow_html=True)
         c1, c2, c3 = st.columns([1, 1, 1])
         with c2:
             with st.container(border=True):
