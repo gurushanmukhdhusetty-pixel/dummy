@@ -303,7 +303,7 @@ def pos():
             iframe_html = f"""
             <!DOCTYPE html><html><head><style>
                 body {{ font-family: monospace; color: #000; padding: 10px; background: #fff; }}
-                .container {{ border: 2px dashed #000; padding: 15px; max-width: 320px; margin: 0 auto; }}
+                .container {{ border: 2px dashed #000; padding: 15px; max-width: 440px; margin: 0 auto; }}
                 .print-btn {{ width: 100%; padding: 12px; background: #4F46E5; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 20px; }}
                 .flex {{ display: flex; justify-content: space-between; }}
                 .line {{ border-bottom: 1px dashed #000; margin: 10px 0; }}
@@ -322,11 +322,11 @@ def pos():
             </body></html>"""
             st.success("✅ Transaction logged successfully!")
             
-            # --- CENTRED & BALANCED RECEIPT CONTAINER ---
-            c_left, c_right = st.columns([1.5, 1])
+            # --- WIDENED & CENTERED FLUID VIEWPORT COLUMN CONTAINER ---
+            c_left, c_right = st.columns([1.8, 1])
             with c_left:
                 st.markdown('<div style="display: flex; justify-content: center; width: 100%;">', unsafe_allow_html=True)
-                components.html(iframe_html, height=480, width=340, scrolling=True)
+                components.html(iframe_html, height=520, width=500, scrolling=True)
                 st.markdown('</div>', unsafe_allow_html=True)
             with c_right:
                 if 'pdf' in st.session_state:
@@ -410,9 +410,7 @@ else:
                     else: st.error("Access Denied: Invalid Credentials.")
     else:
         with st.sidebar:
-            st.subheader("⚙️ Settings")
-            new_lang = st.selectbox("🌐 Language", ["English"], index=0)
-            st.divider()
+            # 🌟 INTERCHANGED POSITION: NAVIGATION BUTTONS PLACED AT THE ABSOLUTE TOP 🌟
             role = st.session_state.current_user["role"]
             st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
             st.divider()
@@ -428,6 +426,11 @@ else:
             st.divider()
             if st.button(lang["logout"], use_container_width=True, type="primary"):
                 st.session_state["logged_in"] = False; st.rerun()
+            
+            # 🌟 INTERCHANGED POSITION: SETTNGS HEADER REMOVED, LANGUAGE CONTROLLER AT THE ABSOLUTE BOTTOM 🌟
+            st.markdown("<br><br><br><br><br><br>", unsafe_allow_html=True)
+            st.divider()
+            new_lang = st.selectbox("🌐 Language", ["English"], index=0, label_visibility="collapsed")
 
         pages = {"pos": pos, "inventory": inventory, "dashboard": dashboard, "staff": staff, "analytics": analytics}
         pages[st.session_state["current_page"]]()
