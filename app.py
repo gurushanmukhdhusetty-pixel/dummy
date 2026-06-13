@@ -7,6 +7,7 @@ import streamlit.components.v1 as components
 from PIL import Image
 import io
 
+# --- COMPULSORY LIBRARIES VALIDATION ---
 try:
     from fpdf import FPDF
     PDF_READY = True
@@ -83,8 +84,10 @@ def get_compressed_base64_image(uploaded_file):
             image.thumbnail((150, 150))
             buffer = io.BytesIO()
             image.save(buffer, format="JPEG", quality=40)
-            return f"data:image/jpeg;base64,{base64_str}" if (base64_str := base64.b64encode(buffer.getvalue()).decode()) else None
-        except Exception as e: st.error(f"Compression Failure: {e}")
+            base64_str = base64.b64encode(buffer.getvalue()).decode()
+            return f"data:image/jpeg;base64,{base64_str}"
+        except Exception as e: 
+            st.error(f"Compression Failure: {e}")
     return None
 
 # -----------------------------
@@ -166,7 +169,6 @@ def inventory():
     
     with st.expander(lang["add_prod"]):
         with st.form("new_prod", clear_on_submit=True):
-            # 🌟 DESIGN EDIT: USER DEFINED SHORT PRODUCT ID 🌟
             c_id, c_name = st.columns([1, 2])
             p_custom_id = c_id.text_input("Product ID Shortcode (e.g., coke, lays-m)").strip().lower()
             name = c_name.text_input(lang["p_name"])
@@ -178,7 +180,6 @@ def inventory():
             img_file = st.file_uploader(lang["upload"], type=["png", "jpg", "jpeg"])
             
             if st.form_submit_button(lang["save"], type="primary") and name:
-                # Fallback to safe shortened string if field left empty
                 final_id = p_custom_id if p_custom_id else str(uuid.uuid4())[:6]
                 img_compressed = get_compressed_base64_image(img_file)
                 
@@ -192,7 +193,6 @@ def inventory():
 
     st.subheader(lang["db"])
     if not df_inv.empty:
-        # Reordering columns layout display grid cleanly
         cols_display = ["id", "sku", "name", "price", "quantity", "image"]
         updated_df = st.data_editor(
             df_inv[cols_display], use_container_width=True, hide_index=True, num_rows="dynamic",
@@ -228,7 +228,6 @@ def pos():
     col1, col2 = st.columns([2.2, 1])
     with col1:
         search = st.text_input(lang["search"])
-        # Matches by name, barcode barcode (sku), or your customized clean text product ID shortcode
         display_df = df_inv if not search else df_inv[
             df_inv['name'].str.contains(search, case=False) | 
             df_inv['sku'].str.contains(search, case=False) |
@@ -322,11 +321,16 @@ def pos():
                 </div><button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
             </body></html>"""
             st.success("✅ Transaction logged successfully!")
-            c_left, c_right = st.columns([1, 1])
-            with c_left: components.html(iframe_html, height=460, scrolling=True)
+            
+            # --- CENTRED & BALANCED RECEIPT CONTAINER ---
+            c_left, c_right = st.columns([1.5, 1])
+            with c_left:
+                st.markdown('<div style="display: flex; justify-content: center; width: 100%;">', unsafe_allow_html=True)
+                components.html(iframe_html, height=480, width=340, scrolling=True)
+                st.markdown('</div>', unsafe_allow_html=True)
             with c_right:
                 if 'pdf' in st.session_state:
-                    st.markdown("<br><br>", unsafe_allow_html=True)
+                    st.markdown("<br><br><br>", unsafe_allow_html=True)
                     st.download_button(lang["dl_pdf"], data=st.session_state['pdf'], file_name=st.session_state['pdf_name'], mime="application/pdf", type="primary", use_container_width=True)
 
 def staff():
