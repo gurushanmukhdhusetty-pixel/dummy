@@ -7,7 +7,6 @@ import streamlit.components.v1 as components
 from PIL import Image
 import io
 
-# --- COMPULSORY LIBRARIES VALIDATION ---
 try:
     from fpdf import FPDF
     PDF_READY = True
@@ -34,43 +33,17 @@ except Exception as e:
 # -----------------------------
 T = {
     "English": {
-        "dash": "📊 Dashboard", "inv": "📦 Inventory", "pos": "🛒 Point of Sale", 
-        "staff": "👥 Staff & User Management", "analytics": "📈 Analytics", "logout": "🚪 Logout",
+        "dash": "📊 Dashboard Metrics", "inv": "📦 Inventory Management", "pos": "🛒 Point of Sale", 
+        "staff": "👥 Staff & User Management", "analytics": "📈 Advanced Analytics", "logout": "🚪 Logout",
         "login_btn": "Login", "user": "Username", "pass": "Password",
-        "tot_prod": "Total Products", "stock": "Units in Stock", "rev": "Gross Revenue",
+        "tot_prod": "Unique Items", "stock": "Total Items Stocked", "rev": "Net Gross Revenue",
         "add_prod": "➕ Register New Product", "p_name": "Product Name", "sku": "SKU / Barcode",
         "price": "Price (₹)", "qty": "Quantity", "upload": "📷 Upload Product Photo", "save": "Save to Database",
-        "db": "📋 Live Database (Double-click to edit)", "search": "🔍 Search Products...",
+        "db": "📋 Live Database (Edit text directly or change images below)", "search": "🔍 Search Products...",
         "add": "Add", "cart": "🧾 Current Cart", "empty": "Cart is Empty",
         "sub": "Subtotal", "disc": "Discount", "tax": "Tax", "tot": "Total",
         "cust": "Customer Name", "checkout": "💳 Checkout & Generate Bill", "dl_pdf": "📄 Download PDF Bill",
         "staff_name": "Full Name", "role": "Role", "add_staff": "Add Staff Member", "dl_csv": "📥 Export CSV"
-    },
-    "Hindi": {
-        "dash": "📊 डैशबोर्ड", "inv": "📦 इन्वेंटरी", "pos": "🛒 बिक्री केंद्र (POS)", 
-        "staff": "👥 स्टाफ और प्रबंधन", "analytics": "📈 एनालिटिक्स", "logout": "🚪 लॉग आउट",
-        "login_btn": "लॉग इन करें", "user": "उपयोगकर्ता नाम", "pass": "पासवर्ड",
-        "tot_prod": "कुल उत्पाद", "stock": "स्टॉक में इकाइयाँ", "rev": "कुल आय",
-        "add_prod": "➕ नया उत्पाद जोड़ें", "p_name": "उत्पाद का नाम", "sku": "बारकोड",
-        "price": "कीमत (₹)", "qty": "मात्रा", "upload": "📷 फोटो अपलोड करें", "save": "सेव करें",
-        "db": "📋 डेटाबेस (संपादित करने के लिए डबल-क्लिक करें)", "search": "🔍 उत्पाद खोजें...",
-        "add": "जोड़ें", "cart": "🧾 कार्ट", "empty": "कार्ट खाली है",
-        "sub": "उप-योग", "disc": "छूट", "tax": "कर", "tot": "कुल",
-        "cust": "ग्राहक का नाम", "checkout": "💳 चेकआउट और बिल (PDF)", "dl_pdf": "📄 PDF बिल डाउनलोड करें",
-        "staff_name": "पूरा नाम", "role": "भूमिका", "add_staff": "स्टाफ जोड़ें", "dl_csv": "📥 CSV डाउनलोड करें"
-    },
-    "Telugu": {
-        "dash": "📊 డాష్‌బోర్డ్", "inv": "📦 ఇన్వెంటరీ", "pos": "🛒 విక్రయ కేంద్రం (POS)", 
-        "staff": "👥 సిబ్బంది & యూజర్ మేనేజ్మెంట్", "analytics": "📈 విశ్లేషణలు", "logout": "🚪 లాగ్ అవుట్",
-        "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
-        "tot_prod": "మొత్తం ఉత్పత్తులు", "stock": "స్టాక్", "rev": "మొత్తం ఆదాయం",
-        "add_prod": "➕ కొత్త ఉత్పత్తిని జోడించండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్",
-        "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఫోటో అప్‌లోడ్", "save": "సేవ్ చేయండి",
-        "db": "📋 డేటాబేస్ (ಸವರಿಸಲು ಡಬಲ್ ಕ್ಲಿಕ್ ಮಾಡಿ)", "search": "🔍 ఉత్పత్తులను శోధించండి...",
-        "add": "జోడించు", "cart": "🧾 బండి", "empty": "బండి ఖాళీగా ఉంది",
-        "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం",
-        "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
-        "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్ చేయండి"
     }
 }
 
@@ -85,9 +58,8 @@ if "cart" not in st.session_state: st.session_state["cart"] = []
 if "last_receipt" not in st.session_state: st.session_state["last_receipt"] = None
 if "current_page" not in st.session_state: st.session_state["current_page"] = "pos"
 
-lang = T[st.session_state.lang]
+lang = T["English"]
 
-# Clean CSS
 st.markdown("""
 <style>
 .stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, label { color: inherit; }
@@ -96,29 +68,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def fetch_inventory():
-    res = db.table("inventory").select("*").execute()
+    res = db.table("inventory").select("*").order("name").execute()
     return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "sku", "name", "price", "quantity", "image"])
 
 def fetch_sales_count():
     res = db.table("sales").select("*").execute()
     return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "customer", "total", "date_str"])
 
-# 🌟 HIGHLY AGGRESSIVE THUMBNAIL COMPRESSION LOGIC 🌟
 def get_compressed_base64_image(uploaded_file):
     if uploaded_file is not None:
         try:
             image = Image.open(uploaded_file)
-            if image.mode in ("RGBA", "P"):
-                image = image.convert("RGB")
-            # Shrink bounding scale down to an ultra-light data weight footprint
+            if image.mode in ("RGBA", "P"): image = image.convert("RGB")
             image.thumbnail((150, 150))
             buffer = io.BytesIO()
-            # Drop structural quality target to maximize data reduction safety limits
             image.save(buffer, format="JPEG", quality=40)
-            base64_str = base64.b64encode(buffer.getvalue()).decode()
-            return f"data:image/jpeg;base64,{base64_str}"
-        except Exception as e:
-            st.error(f"Image Compression Failure: {e}")
+            return f"data:image/jpeg;base64,{base64_str}" if (base64_str := base64.b64encode(buffer.getvalue()).decode()) else None
+        except Exception as e: st.error(f"Compression Failure: {e}")
     return None
 
 # -----------------------------
@@ -127,32 +93,20 @@ def get_compressed_base64_image(uploaded_file):
 def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, total):
     if not PDF_READY: return None
     pdf = FPDF()
-    pdf.add_page()
-    pdf.rect(5, 5, 200, 287)
-    
-    pdf.set_font("Arial", 'B', 18)
-    pdf.cell(190, 15, "TITAN CONVENIENCE AND GROCERY", ln=True, align='C')
-    pdf.set_font("Arial", 'I', 10)
-    pdf.cell(190, 5, "Official Retail Transaction Invoice", ln=True, align='C')
-    pdf.ln(5)
-    
+    pdf.add_page(); pdf.rect(5, 5, 200, 287)
+    pdf.set_font("Arial", 'B', 18); pdf.cell(190, 15, "TITAN CONVENIENCE AND GROCERY", ln=True, align='C')
+    pdf.set_font("Arial", 'I', 10); pdf.cell(190, 5, "Official Retail Transaction Invoice", ln=True, align='C'); pdf.ln(5)
     pdf.set_font("Arial", '', 10)
-    pdf.cell(95, 6, f"Invoice No: {sale_id}", 0, 0)
-    pdf.cell(95, 6, f"Date/Time: {date_str}", 0, 1, 'R')
-    pdf.cell(190, 6, f"Customer: {customer}", 0, 1)
-    pdf.line(10, 45, 200, 45)
-    pdf.ln(5)
+    pdf.cell(95, 6, f"Invoice No: {sale_id}", 0, 0); pdf.cell(95, 6, f"Date/Time: {date_str}", 0, 1, 'R')
+    pdf.cell(190, 6, f"Customer: {customer}", 0, 1); pdf.line(10, 45, 200, 45); pdf.ln(5)
     
     pdf.set_font("Arial", 'B', 11)
-    pdf.cell(90, 8, "Item Description", 1, 0, 'C')
-    pdf.cell(30, 8, "Qty", 1, 0, 'C')
-    pdf.cell(70, 8, "Amount (Rs)", 1, 1, 'C')
+    pdf.cell(90, 8, "Item Description", 1, 0, 'C'); pdf.cell(30, 8, "Qty", 1, 0, 'C'); pdf.cell(70, 8, "Amount (Rs)", 1, 1, 'C')
     
     pdf.set_font("Arial", '', 10)
     for item in cart:
         clean_name = item['name'].encode('ascii', 'ignore').decode('ascii')[:30]
-        if not clean_name: clean_name = "Grocery Item"
-        pdf.cell(90, 8, f" {clean_name}", 1, 0)
+        pdf.cell(90, 8, f" {clean_name if clean_name else 'Grocery Item'}", 1, 0)
         pdf.cell(30, 8, str(item['quantity']), 1, 0, 'C')
         pdf.cell(70, 8, f"{item['subtotal']:,.2f} ", 1, 1, 'R')
         
@@ -161,10 +115,7 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
     if discount > 0:
         pdf.cell(120, 6, "", 0, 0); pdf.cell(35, 6, "Discount:", 0, 0, 'R'); pdf.cell(35, 6, f"-{discount:,.2f} ", 0, 1, 'R')
     pdf.cell(120, 6, "", 0, 0); pdf.cell(35, 6, "Tax (5%):", 0, 0, 'R'); pdf.cell(35, 6, f"+{tax:,.2f} ", 0, 1, 'R')
-    
-    pdf.line(130, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(2)
-    pdf.set_font("Arial", 'B', 14)
+    pdf.line(130, pdf.get_y(), 200, pdf.get_y()); pdf.ln(2); pdf.set_font("Arial", 'B', 14)
     pdf.cell(120, 8, "", 0, 0); pdf.cell(35, 8, "GRAND TOTAL:", 0, 0, 'R'); pdf.cell(35, 8, f"{total:,.2f} ", 0, 1, 'R')
     return bytes(pdf.output(dest='S'), 'latin-1')
 
@@ -172,67 +123,117 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
 # 5. CORE INTERFACE PAGES
 # -----------------------------
 def dashboard():
-    st.title(lang["dash"])
+    st.title("📊 Executive Operational Dashboard")
     df_inv = fetch_inventory()
     df_sales = fetch_sales_count()
     
-    tot_qty = df_inv["quantity"].sum() if not df_inv.empty else 0
+    tot_sku = len(df_inv)
+    tot_items = int(df_inv["quantity"].sum()) if not df_inv.empty else 0
     tot_rev = df_sales["total"].astype(float).sum() if not df_sales.empty else 0.0
+    total_tx = len(df_sales)
+    avg_ticket = tot_rev / total_tx if total_tx > 0 else 0.0
     
-    c1, c2, c3 = st.columns(3)
-    c1.metric(lang["tot_prod"], len(df_inv))
-    c2.metric(lang["stock"], tot_qty)
-    c3.metric(lang["rev"], f"₹{tot_rev:,.2f}")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Net Gross Revenue", f"₹{tot_rev:,.2f}")
+    c2.metric("Total Transactions Logged", f"{total_tx} Orders")
+    c3.metric("Average Ticket Value", f"₹{avg_ticket:,.2f}")
+    c4.metric("Live Catalog SKUs", f"{tot_sku} Items")
+    
+    st.markdown("---")
+    
+    col_a, col_b = st.columns([2, 1])
+    with col_a:
+        st.subheader("📆 Live Sales Pipeline Tracking")
+        if not df_sales.empty:
+            df_chart = df_sales.copy()
+            df_chart['date_only'] = pd.to_datetime(df_chart['date_str']).dt.date
+            daily_rev = df_chart.groupby('date_only')['total'].sum().reset_index()
+            daily_rev.columns = ['Date', 'Revenue (₹)']
+            st.line_chart(daily_rev.set_index('Date'), color="#4F46E5")
+        else: st.info("No pipeline logs parsed.")
+        
+    with col_b:
+        st.subheader("⚠️ Critical Low Stock Warnings")
+        low_stock = df_inv[df_inv["quantity"] <= st.session_state["low_stock_threshold"]]
+        if not low_stock.empty:
+            for _, item in low_stock.iterrows():
+                st.error(f"🔴 **{item['name']}** - Only {item['quantity']} units left! (ID: {item['id']})")
+        else: st.success("🍏 All parameters normal. Stock levels fully satisfied.")
 
 def inventory():
-    st.title(lang["inv"])
+    st.title("📦 Comprehensive Catalog Registry")
     df_inv = fetch_inventory()
     
     with st.expander(lang["add_prod"]):
         with st.form("new_prod", clear_on_submit=True):
+            # 🌟 DESIGN EDIT: USER DEFINED SHORT PRODUCT ID 🌟
+            c_id, c_name = st.columns([1, 2])
+            p_custom_id = c_id.text_input("Product ID Shortcode (e.g., coke, lays-m)").strip().lower()
+            name = c_name.text_input(lang["p_name"])
+            
             c1, c2 = st.columns(2)
-            name = c1.text_input(lang["p_name"])
-            sku = c2.text_input(lang["sku"])
+            sku = c1.text_input(lang["sku"])
             price = c1.number_input(lang["price"], min_value=0.0)
             qty = c2.number_input(lang["qty"], min_value=0)
             img_file = st.file_uploader(lang["upload"], type=["png", "jpg", "jpeg"])
             
             if st.form_submit_button(lang["save"], type="primary") and name:
+                # Fallback to safe shortened string if field left empty
+                final_id = p_custom_id if p_custom_id else str(uuid.uuid4())[:6]
                 img_compressed = get_compressed_base64_image(img_file)
-                new_id = str(uuid.uuid4())[:8]
                 
-                # 🌟 FAILSAFE PLUG: EXPLICIT SAFETY WRAP TO OBLITERATE ROW CRASHES 🌟
                 try:
-                    db.table("inventory").insert({"id": new_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_compressed}).execute()
-                    st.success("✅ Added to Inventory Database!")
-                except Exception as db_err:
-                    st.warning("⚠️ Image payload weight exceeded server thresholds. Product configured with standard text records instead.")
-                    # Re-attempt database write without the heavy payload attachment
-                    db.table("inventory").insert({"id": new_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": None}).execute()
-                
+                    db.table("inventory").insert({"id": final_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_compressed}).execute()
+                    st.success(f"✅ Added to Inventory Database with ID: {final_id}")
+                except Exception:
+                    db.table("inventory").insert({"id": final_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": None}).execute()
+                    st.success(f"✅ Added text record with ID: {final_id}")
                 st.rerun()
 
     st.subheader(lang["db"])
     if not df_inv.empty:
+        # Reordering columns layout display grid cleanly
+        cols_display = ["id", "sku", "name", "price", "quantity", "image"]
         updated_df = st.data_editor(
-            df_inv, use_container_width=True, hide_index=True, num_rows="dynamic",
-            column_config={"id": None, "image": st.column_config.ImageColumn("Preview")}
+            df_inv[cols_display], use_container_width=True, hide_index=True, num_rows="dynamic",
+            column_config={
+                "id": st.column_config.TextColumn("Product ID / Shortcode", required=True),
+                "image": st.column_config.ImageColumn("Preview")
+            }
         )
-        if st.button("Save Table Changes", type="primary"):
+        
+        st.markdown("---")
+        st.markdown("### 📷 Select Product to Inject/Replace Image")
+        target_product = st.selectbox("Choose Item to Modify", df_inv["name"].tolist())
+        target_file = st.file_uploader("Upload New Image Payload", type=["png", "jpg", "jpeg"], key="bulk_inject")
+        
+        c_save, c_sync = st.columns([1, 4])
+        if c_save.button("🚀 Push Image to Cloud", type="primary") and target_file:
+            new_img_str = get_compressed_base64_image(target_file)
+            target_id = df_inv[df_inv["name"] == target_product]["id"].values[0]
+            db.table("inventory").update({"image": new_img_str}).eq("id", target_id).execute()
+            st.success("Image compiled and successfully synced!")
+            st.rerun()
+            
+        if c_sync.button("💾 Sync Table Text Modifications Only"):
             for _, row in updated_df.iterrows():
                 db.table("inventory").update({"sku": row['sku'], "name": row['name'], "price": row['price'], "quantity": row['quantity']}).eq("id", row['id']).execute()
             st.rerun()
 
 def pos():
-    st.title(lang["pos"])
+    st.title("🛒 Transaction Terminal (POS)")
     df_inv = fetch_inventory()
     if df_inv.empty: st.warning("Inventory empty. Populate tables inside dashboard first."); return
 
     col1, col2 = st.columns([2.2, 1])
-
     with col1:
         search = st.text_input(lang["search"])
-        display_df = df_inv if not search else df_inv[df_inv['name'].str.contains(search, case=False) | df_inv['sku'].str.contains(search, case=False)]
+        # Matches by name, barcode barcode (sku), or your customized clean text product ID shortcode
+        display_df = df_inv if not search else df_inv[
+            df_inv['name'].str.contains(search, case=False) | 
+            df_inv['sku'].str.contains(search, case=False) |
+            df_inv['id'].str.contains(search, case=False)
+        ]
 
         cols = st.columns(3)
         for idx, row in display_df.iterrows():
@@ -241,6 +242,7 @@ def pos():
                     if pd.notna(row.get('image')) and row['image']: 
                         st.image(row['image'], use_container_width=True)
                     st.markdown(f"**{row['name']}**")
+                    st.caption(f"ID Shortcode: `{row['id']}`")
                     color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else "gray"
                     st.markdown(f"<span style='color:{color}'>{lang['stock']}: {row['quantity']}</span>", unsafe_allow_html=True)
                     st.markdown(f"#### ₹{row['price']:,.2f}")
@@ -277,34 +279,24 @@ def pos():
                 st.markdown(f"### {lang['tot']}: ₹{total:,.2f}")
                 cust = st.text_input(lang["cust"], "Walk-in")
                 
-                # --- BACKDATED TRANSACTION SELECTOR ---
                 st.divider()
                 st.markdown("##### 📅 Transaction Date & Time Adjustment")
                 tx_date = st.date_input("Execution Date", datetime.now())
                 tx_time = st.time_input("Execution Time", datetime.now().time())
-                tx_combined = datetime.combine(tx_date, tx_time)
-                d_str = tx_combined.strftime("%Y-%m-%d %H:%M")
+                d_str = datetime.combine(tx_date, tx_time).strftime("%Y-%m-%d %H:%M")
                 
                 if st.button(lang["checkout"], type="primary", use_container_width=True):
                     s_id = str(uuid.uuid4())[:8].upper()
-                    
                     for c_item in st.session_state.cart:
                         current_stock = df_inv[df_inv['id'] == c_item['id']]['quantity'].values[0]
                         db.table("inventory").update({"quantity": int(current_stock - c_item['quantity'])}).eq("id", c_item['id']).execute()
                     
                     db.table("sales").insert({"id": s_id, "customer": cust, "total": total, "date_str": d_str}).execute()
-
-                    st.session_state.last_receipt = {
-                        "id": s_id, "date": d_str, "cust": cust, "items": list(st.session_state.cart),
-                        "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total
-                    }
-
+                    st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": cust, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total}
                     if PDF_READY:
                         st.session_state['pdf'] = generate_pdf(s_id, d_str, cust, st.session_state.cart, subtotal, disc_amt, tax_amt, total)
                         st.session_state['pdf_name'] = f"Invoice_{s_id}.pdf"
-
-                    st.session_state.cart.clear()
-                    st.rerun()
+                    st.session_state.cart.clear(); st.rerun()
 
         if st.session_state.last_receipt:
             r = st.session_state.last_receipt
@@ -329,7 +321,6 @@ def pos():
                     <h3 class="flex" style="margin:4px 0 0 0;"><span>TOTAL:</span> <span>Rs. {r['tot']:,.2f}</span></h3>
                 </div><button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
             </body></html>"""
-            
             st.success("✅ Transaction logged successfully!")
             c_left, c_right = st.columns([1, 1])
             with c_left: components.html(iframe_html, height=460, scrolling=True)
@@ -366,12 +357,30 @@ def staff():
     if res.data: st.dataframe(pd.DataFrame(res.data), use_container_width=True, hide_index=True)
 
 def analytics():
-    st.title(lang["analytics"])
+    st.title("📈 Advanced Performance Analytics")
     df_sales = fetch_sales_count()
-    if df_sales.empty: st.info("No sales logs found."); return
+    if df_sales.empty: st.info("No transaction telemetry caught."); return
     
-    df_sales['date_only'] = pd.to_datetime(df_sales['date_str']).dt.date
-    st.bar_chart(df_sales.groupby('date_only')['total'].sum(), color="#4F46E5")
+    df_sales['datetime'] = pd.to_datetime(df_sales['date_str'])
+    df_sales['date_only'] = df_sales['datetime'].dt.date
+    df_sales['hour'] = df_sales['datetime'].dt.hour
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        st.subheader("📅 Gross Revenue Progression")
+        daily_perf = df_sales.groupby('date_only')['total'].sum().reset_index()
+        daily_perf.columns = ['Date', 'Sales (₹)']
+        st.bar_chart(daily_perf.set_index('Date'), color="#4F46E5")
+        
+    with c2:
+        st.subheader("⏰ Traffic Density Peak Distribution Hours")
+        hourly_perf = df_sales.groupby('hour')['total'].count().reset_index()
+        hourly_perf.columns = ['Hour of Day', 'Total Orders Placed']
+        st.line_chart(hourly_perf.set_index('Hour of Day'), color="#10B981")
+        
+    st.markdown("---")
+    st.subheader("📜 Complete Historical Ledger Audits")
+    st.dataframe(df_sales[['id', 'customer', 'total', 'date_str']], use_container_width=True, hide_index=True)
     st.download_button(lang["dl_csv"], data=df_sales.to_csv(index=False).encode('utf-8'), file_name='sales_report.csv', type="primary")
 
 # -----------------------------
@@ -380,7 +389,6 @@ def analytics():
 if not DB_CONNECTED:
     st.error("🛑 CRITICAL SERVER ERROR: Application fails to connect to cloud services.")
     st.info(f"Diagnostic Error Output: {CONNECTION_ERROR}")
-    st.warning("Ensure SUPABASE_URL and SUPABASE_KEY configurations match your Deployed App Secrets Framework.")
 else:
     if not st.session_state["logged_in"]:
         st.markdown("<br><br><h2 style='text-align: center;'>🏬 Titan Inventory & POS System</h2>", unsafe_allow_html=True)
@@ -395,41 +403,27 @@ else:
                         st.session_state["logged_in"] = True
                         st.session_state["current_user"] = {"username": usr, "role": res.data[0]["role"], "is_main": res.data[0]["is_main"]}
                         st.rerun()
-                    else: 
-                        st.error("Access Denied: Invalid Credentials.")
+                    else: st.error("Access Denied: Invalid Credentials.")
     else:
         with st.sidebar:
             st.subheader("⚙️ Settings")
-            new_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
-            if new_lang != st.session_state.lang:
-                st.session_state.lang = new_lang
-                st.rerun()
-                
+            new_lang = st.selectbox("🌐 Language", ["English"], index=0)
             st.divider()
             role = st.session_state.current_user["role"]
             st.caption(f"👤 {st.session_state.current_user['username'].title()} ({role})")
             st.divider()
             
-            # Button Navigation Blocks
-            if st.button(lang["pos"], use_container_width=True, type="secondary"):
-                st.session_state["current_page"] = "pos"
-            if st.button(lang["inv"], use_container_width=True, type="secondary"):
-                st.session_state["current_page"] = "inventory"
-                
+            if st.button(lang["pos"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "pos"
+            if st.button(lang["inv"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "inventory"
             if role in ["Owner", "Manager"]:
-                if st.button(lang["dash"], use_container_width=True, type="secondary"):
-                    st.session_state["current_page"] = "dashboard"
-                if st.button(lang["staff"], use_container_width=True, type="secondary"):
-                    st.session_state["current_page"] = "staff"
+                if st.button(lang["dash"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "dashboard"
+                if st.button(lang["staff"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "staff"
             if role == "Owner":
-                if st.button(lang["analytics"], use_container_width=True, type="secondary"):
-                    st.session_state["current_page"] = "analytics"
+                if st.button(lang["analytics"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "analytics"
                     
             st.divider()
             if st.button(lang["logout"], use_container_width=True, type="primary"):
-                st.session_state["logged_in"] = False
-                st.rerun()
+                st.session_state["logged_in"] = False; st.rerun()
 
-        # Dynamic Execution Frame Router
         pages = {"pos": pos, "inventory": inventory, "dashboard": dashboard, "staff": staff, "analytics": analytics}
         pages[st.session_state["current_page"]]()
