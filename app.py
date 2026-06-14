@@ -27,6 +27,7 @@ try:
     db = create_client(url, key)
     DB_CONNECTED = True
 except Exception as e:
+    db = None
     DB_CONNECTED = False
     CONNECTION_ERROR = str(e)
 
@@ -36,7 +37,7 @@ except Exception as e:
 T = {
     "English": {
         "dash": "📊 Dashboard Metrics", "inv": "📦 Inventory Management", "pos": "🛒 Point of Sale", 
-        "staff": "👥 Staff & User Management", "analytics": "📈 Advanced Analytics", "logout": "Logout",
+        "staff": "👥 Staff & User Management", "analytics": "🔮 Predictive Analytics", "logout": "Logout",
         "login_btn": "Login", "user": "Username", "pass": "Password",
         "tot_prod": "Unique Items", "stock": "Total Items Stocked", "rev": "Net Gross Revenue",
         "add_prod": "➕ Register New Product", "p_name": "Product Name", "sku": "SKU / Barcode",
@@ -44,12 +45,12 @@ T = {
         "db": "📋 Live Database (Edit text directly or change images below)", "search": "🔍 Search Products...",
         "add": "Add", "cart": "🧾 Current Cart", "empty": "Cart is Empty",
         "sub": "Subtotal", "disc": "Discount", "tax": "Tax", "tot": "Total",
-        "cust": "Customer Name", "checkout": "💳 Checkout & Generate Bill", "dl_pdf": "📄 Download PDF Bill",
+        "cust": "Customer Mobile (10-Digit)", "checkout": "💳 Checkout & Generate Bill", "dl_pdf": "📄 Download PDF Bill",
         "staff_name": "Full Name", "role": "Role", "add_staff": "Add Staff Member", "dl_csv": "📥 Export CSV"
     },
     "Hindi": {
         "dash": "📊 डैशबोर्ड मेट्रिक्स", "inv": "📦 इन्वेंटरी प्रबंधन", "pos": "🛒 बिक्री केंद्र (POS)", 
-        "staff": "👥 स्टाफ और उपयोगकर्ता प्रबंधन", "analytics": "📈 उन्नत विश्लेषिकी", "logout": "लॉग आउट",
+        "staff": "👥 स्टाफ और उपयोगकर्ता प्रबंधन", "analytics": "🔮 भविष्य कहनेवाला विश्लेषण", "logout": "लॉग आउट",
         "login_btn": "लॉग इन करें", "user": "उपयोगकर्ता नाम", "pass": "पासवर्ड",
         "tot_prod": "अद्वितीय उत्पाद", "stock": "स्टॉक में कुल इकाइयाँ", "rev": "कुल सकल राजस्व",
         "add_prod": "➕ नया उत्पाद पंजीकृत करें", "p_name": "उत्पाद का नाम", "sku": "बारकोड / SKU",
@@ -57,12 +58,12 @@ T = {
         "db": "📋 लाइव डेटाबेस (सीधे संशोधित करें या नीचे चित्र बदलें)", "search": "🔍 उत्पाद खोजें...",
         "add": "जोड़ें", "cart": "🧾 वर्तमान कार्ट", "empty": "कार्ट खाली है",
         "sub": "उप-योग", "disc": "छूट", "tax": "कर", "tot": "कुल योग",
-        "cust": "ग्राहक का नाम", "checkout": "💳 चेकआउट और बिल बनाएं", "dl_pdf": "📄 PDF बिल डाउनलोड करें",
+        "cust": "ग्राहक मोबाइल नंबर", "checkout": "💳 चेकआउट और बिल बनाएं", "dl_pdf": "📄 PDF बिल डाउनलोड करें",
         "staff_name": "पूरा नाम", "role": "भूमिका", "add_staff": "स्टाफ सदस्य जोड़ें", "dl_csv": "📥 CSV निर्यात करें"
     },
     "Telugu": {
         "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంటరీ మేనేజ్‌మెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
-        "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "📈 అడ్వాన్స్డ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
+        "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "🔮 ప్రిడిక్టివ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
         "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
         "add_prod": "➕ కొత్త ఉత్పత్తిని చేర్చండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్ / SKU",
@@ -70,7 +71,7 @@ T = {
         "db": "📋 లైవ్ డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను వెతకండి...",
         "add": "జోడించు", "cart": "🧾 ప్రస్తుత కార్ట్", "empty": "కార్ట్ ఖాళీగా ఉంది",
         "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం బిల్లు",
-        "cust": "కస్టమర్ పేరు", "checkout": "💳 చెక్అవుట్ & బిల్లు జనరేషన్", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
+        "cust": "కస్టమర్ మొబైల్ నంబర్", "checkout": "💳 చెక్అవుట్ & బిల్లు జనరేషన్", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
         "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్"
     }
 }
@@ -171,11 +172,11 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div {
 
 def fetch_inventory():
     res = db.table("inventory").select("*").order("name").execute()
-    return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "sku", "name", "price", "quantity", "image"])
+    return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "sku", "name", "price", "quantity", "image", "category"])
 
 def fetch_sales_count():
     res = db.table("sales").select("*").execute()
-    return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "customer", "total", "date_str"])
+    return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "customer", "total", "date_str", "payment_mode"])
 
 def get_compressed_base64_image(uploaded_file):
     if uploaded_file is not None:
@@ -192,13 +193,13 @@ def get_compressed_base64_image(uploaded_file):
     return None
 
 # -----------------------------
-# 🌟 PREDICTIVE WEATHER REVENUE ADVISOR 🌟
+# 🌦️ PREDICTIVE WEATHER REVENUE ADVISOR
 # -----------------------------
 def render_weather_predictive_alerts(df_inv):
     try:
         api_key = st.secrets["OPENWEATHER_API_KEY"]
     except Exception:
-        st.warning("⚠️ OpenWeather API Key missing from your Streamlit workspace environment secrets configuration.")
+        st.warning("⚠️ OpenWeather API Key missing from configuration files.")
         return
 
     url = f"https://api.openweathermap.org/data/2.5/forecast?q=Hyderabad,IN&appid={api_key}&units=metric"
@@ -208,7 +209,7 @@ def render_weather_predictive_alerts(df_inv):
         forecast_list = response.get("list", [])
         
         if response.get("cod") != "200" or not forecast_list:
-            st.error(f"🌦️ Weather API Error: {response.get('message', 'Invalid API Key or Limit Exceeded')}")
+            st.error(f"🌦️ Weather API Error: {response.get('message', 'Validation Error')}")
             return
         
         max_temp = max([item["main"]["temp_max"] for item in forecast_list[:16]])
@@ -220,7 +221,6 @@ def render_weather_predictive_alerts(df_inv):
         maggi_row = df_inv[df_inv['id'] == 'maggi']
         maggi_qty = int(maggi_row['quantity'].values[0]) if not maggi_row.empty else 0
         
-        # Displaying parsed real telemetry data cards
         c_w1, c_w2 = st.columns(2)
         c_w1.metric("Calculated 48H Peak Temp", f"{max_temp:.1f}°C")
         c_w2.metric("Precipitation Inbound", "Yes" if has_rain else "No")
@@ -230,7 +230,7 @@ def render_weather_predictive_alerts(df_inv):
         if max_temp > 25.0:  
             with st.container(border=True):
                 st.error(f"☀️ **High-Temperature Run-Rate Advisory Active**")
-                st.write(f"Atmospheric changes indicate elevated temperatures across Hyderabad ({max_temp:.1f}°C) over the next 48 hours. Historically, your warehouse beverage categories see an automated **40% sales acceleration spike**.")
+                st.write(f"Atmospheric updates indicate heatwave conditions in Hyderabad ({max_temp:.1f}°C). Historically, your warehouse beverage categories see an automated **40% sales acceleration spike**.")
                 if coke_qty < 50:
                     st.warning(f"🚨 **Prescriptive Action Required:** Current `coke` stock is low (**{coke_qty} units**). Place an immediate vendor procurement request for **{50 - coke_qty} units** before local delivery timelines expire to protect your seasonal margins.")
                 else:
@@ -239,7 +239,7 @@ def render_weather_predictive_alerts(df_inv):
         elif has_rain:
             with st.container(border=True):
                 st.info("🌧️ **Monsoon Sales Distribution Strategy Triggered**")
-                st.write("Heavy precipitation forms detected ahead in Telangana. Physical store walking traffic is calculated to contract by **50%**, but comfort meal categories (*Maggi Noodles*) experience a baseline **25% velocity increase**.")
+                st.write("Heavy rainfall forms detected ahead. Physical store walking traffic is calculated to contract by **50%**, but comfort meal categories (*Maggi Noodles*) experience a baseline **25% velocity increase**.")
                 if maggi_qty < 60:
                     st.warning(f"📦 **Prescriptive Action Required:** Order an extra crate (**{60 - maggi_qty} packs**) of `maggi` immediately and instruct staff to move packaged noodle stacks to the point-of-sale checkout line counter.")
                 else:
@@ -253,7 +253,7 @@ def render_weather_predictive_alerts(df_inv):
 # -----------------------------
 # 4. INVOICE GENERATOR
 # -----------------------------
-def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, total):
+def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, total, pay_mode="Cash"):
     if not PDF_READY: return None
     pdf = FPDF()
     pdf.add_page(); pdf.rect(5, 5, 200, 287)
@@ -261,7 +261,7 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
     pdf.set_font("Arial", 'I', 10); pdf.cell(190, 5, "Official Retail Transaction Invoice", ln=True, align='C'); pdf.ln(5)
     pdf.set_font("Arial", '', 10)
     pdf.cell(95, 6, f"Invoice No: {sale_id}", 0, 0); pdf.cell(95, 6, f"Date/Time: {date_str}", 0, 1, 'R')
-    pdf.cell(190, 6, f"Customer: {customer}", 0, 1); pdf.line(10, 45, 200, 45); pdf.ln(5)
+    pdf.cell(190, 6, f"Customer Account: {customer} | Mode: {pay_mode}", 0, 1); pdf.line(10, 45, 200, 45); pdf.ln(5)
     
     pdf.set_font("Arial", 'B', 11)
     pdf.cell(90, 8, "Item Description", 1, 0, 'C'); pdf.cell(30, 8, "Qty", 1, 0, 'C'); pdf.cell(70, 8, "Amount (Rs)", 1, 1, 'C')
@@ -304,7 +304,6 @@ def dashboard():
     c4.metric(lang["tot_prod"], f"{tot_sku} Items")
     
     st.markdown("---")
-    
     col_a, col_b = st.columns([2, 1])
     with col_a:
         st.subheader("📆 Live Sales Pipeline Tracking")
@@ -338,6 +337,7 @@ def inventory():
             sku = c1.text_input(lang["sku"])
             price = c1.number_input(lang["price"], min_value=0.0)
             qty = c2.number_input(lang["qty"], min_value=0)
+            cat = c2.selectbox("Product Category Mapping", ["General", "Drinks", "Snacks", "Dairy"])
             img_file = st.file_uploader(lang["upload"], type=["png", "jpg", "jpeg"])
             
             if st.form_submit_button(lang["save"], type="primary") and name:
@@ -345,20 +345,21 @@ def inventory():
                 img_compressed = get_compressed_base64_image(img_file)
                 
                 try:
-                    db.table("inventory").insert({"id": final_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_compressed}).execute()
+                    db.table("inventory").insert({"id": final_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_compressed, "category": cat}).execute()
                     st.success(f"✅ Added to Inventory Database with ID: {final_id}")
                 except Exception:
-                    db.table("inventory").insert({"id": final_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": None}).execute()
+                    db.table("inventory").insert({"id": final_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": None, "category": cat}).execute()
                     st.success(f"✅ Added text record with ID: {final_id}")
                 st.rerun()
 
     st.subheader(lang["db"])
     if not df_inv.empty:
-        cols_display = ["id", "sku", "name", "price", "quantity", "image"]
+        cols_display = ["id", "sku", "name", "price", "quantity", "category", "image"]
         updated_df = st.data_editor(
             df_inv[cols_display], use_container_width=True, hide_index=True, num_rows="dynamic",
             column_config={
                 "id": st.column_config.TextColumn("Product ID / Shortcode", required=True),
+                "category": st.column_config.SelectboxColumn("Category", options=["General", "Drinks", "Snacks", "Dairy"], required=True),
                 "image": st.column_config.ImageColumn("Preview")
             }
         )
@@ -376,9 +377,9 @@ def inventory():
             st.success("Image compiled and successfully synced!")
             st.rerun()
             
-        if c_sync.button("💾 Sync Table Text Modifications Only"):
+        if c_sync.button("💾 Sync Table Grid Changes Only"):
             for _, row in updated_df.iterrows():
-                db.table("inventory").update({"sku": row['sku'], "name": row['name'], "price": row['price'], "quantity": row['quantity']}).eq("id", row['id']).execute()
+                db.table("inventory").update({"sku": row['sku'], "name": row['name'], "price": row['price'], "quantity": row['quantity'], "category": row['category']}).eq("id", row['id']).execute()
             st.rerun()
 
 def pos():
@@ -388,13 +389,22 @@ def pos():
 
     col1, col2 = st.columns([2.0, 1.2])
     with col1:
+        # 🌟 NEW: QUICK-TABS (HORIZONTAL CATEGORY SELECTION PILLS) 🌟
+        chosen_cat = st.pills("Quick Filters By Department Tag", ["All", "Drinks", "Snacks", "Dairy", "General"], index=0)
+        
         search = st.text_input(lang["search"], value="", autocomplete="off")
         
-        display_df = df_inv if not search else df_inv[
-            df_inv['name'].str.contains(search, case=False) | 
-            df_inv['sku'].str.contains(search, case=False) |
-            df_inv['id'].str.contains(search, case=False)
-        ]
+        # Apply cascade filters sequentially
+        display_df = df_inv
+        if chosen_cat != "All":
+            display_df = display_df[display_df['category'] == chosen_cat]
+            
+        if search:
+            display_df = display_df[
+                display_df['name'].str.contains(search, case=False) | 
+                display_df['sku'].str.contains(search, case=False) |
+                display_df['id'].str.contains(search, case=False)
+            ]
 
         cols = st.columns(3)
         for idx, row in display_df.reset_index().iterrows():
@@ -406,7 +416,7 @@ def pos():
                         st.markdown("<div style='height:140px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#94A3B8; margin-bottom:8px;'>No Image</div>", unsafe_allow_html=True)
                     
                     st.markdown(f"**{row['name']}**")
-                    st.caption(f"ID Shortcode: `{row['id']}`")
+                    st.caption(f"ID: `{row['id']}` | Tag: `{row['category']}`")
                     
                     color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else "gray"
                     st.markdown(f"<span style='color:{color}'>{lang['stock']}: {row['quantity']}</span>", unsafe_allow_html=True)
@@ -442,24 +452,59 @@ def pos():
                 
                 st.caption(f"{lang['sub']}: ₹{subtotal:,.2f} | {lang['tax']}: +₹{tax_amt:,.2f} | {lang['disc']}: -₹{disc_amt:,.2f}")
                 st.markdown(f"### {lang['tot']}: ₹{total:,.2f}")
-                cust = st.text_input(lang["cust"], "Walk-in")
+                
+                # 🌟 NEW: KHATA CREDIT AND CUSTOMER RETRIEVAL LOGIC 🌟
+                st.markdown("##### 👥 Customer Transaction Routing")
+                customer_input = st.text_input(lang["cust"], value="Walk-in").strip()
+                
+                payment_mode = st.radio("Settle Payment Mode", ["Cash / UPI", "Khata Store Credit"], horizontal=True)
+                
+                # Dynamic validation check if credit routing is requested
+                customer_profile = None
+                if customer_input != "Walk-in" and customer_input:
+                    res_cust = db.table("customers").select("*").eq("phone", customer_input).execute()
+                    if res_cust.data:
+                        customer_profile = res_cust.data[0]
+                        st.success(f"👤 Account: **{customer_profile['name']}** | Balance: **₹{float(customer_profile['khata_balance']):,.2f}**")
+                    else:
+                        st.warning("⚠️ Mobile record not found in system storage database.")
+                        with st.expander("➕ Register New Khata Account Profiles", expanded=False):
+                            new_c_name = st.text_input("Client Full Name Key")
+                            if st.button("Save New Account Record"):
+                                if new_c_name and customer_input:
+                                    db.table("customers").insert({"phone": customer_input, "name": new_c_name, "khata_balance": 0}).execute()
+                                    st.success("Account loaded successfully!")
+                                    st.rerun()
                 
                 st.divider()
-                st.markdown("##### 📅 Transaction Date & Time Adjustment")
+                st.markdown("##### 📅 Transaction Date Adjustments")
                 tx_date = st.date_input("Execution Date", datetime.now())
                 tx_time = st.time_input("Execution Time", datetime.now().time())
                 d_str = datetime.combine(tx_date, tx_time).strftime("%Y-%m-%d %H:%M")
                 
                 if st.button(lang["checkout"], type="primary", use_container_width=True):
                     s_id = str(uuid.uuid4())[:8].upper()
+                    
+                    # Prevent execution anomalies if customer profile is missing for store credit routing balances
+                    if payment_mode == "Khata Store Credit" and not customer_profile:
+                        st.error("🛑 Request Refused: An active valid Customer Profile record is mandatory for credit bookkeeping ledger inputs.")
+                        return
+                    
+                    # Reduce item counts from main cloud inventory indices
                     for c_item in st.session_state.cart:
                         current_stock = df_inv[df_inv['id'] == c_item['id']]['quantity'].values[0]
                         db.table("inventory").update({"quantity": int(current_stock - c_item['quantity'])}).eq("id", c_item['id']).execute()
                     
-                    db.table("sales").insert({"id": s_id, "customer": cust, "total": total, "date_str": d_str}).execute()
-                    st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": cust, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total}
+                    # Update customer balance parameter if credit billing mode is called
+                    if payment_mode == "Khata Store Credit" and customer_profile:
+                        new_bal = float(customer_profile['khata_balance']) + total
+                        db.table("customers").update({"khata_balance": new_bal}).eq("phone", customer_input).execute()
+                    
+                    db.table("sales").insert({"id": s_id, "customer": customer_input, "total": total, "date_str": d_str, "payment_mode": payment_mode}).execute()
+                    st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": customer_input, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total, "mode": payment_mode}
+                    
                     if PDF_READY:
-                        st.session_state['pdf'] = generate_pdf(s_id, d_str, cust, st.session_state.cart, subtotal, disc_amt, tax_amt, total)
+                        st.session_state['pdf'] = generate_pdf(s_id, d_str, customer_input, st.session_state.cart, subtotal, disc_amt, tax_amt, total, payment_mode)
                         st.session_state['pdf_name'] = f"Invoice_{s_id}.pdf"
                     st.session_state.cart.clear(); st.rerun()
 
@@ -480,8 +525,8 @@ def pos():
                     <h2 style="text-align:center; margin-top:0; letter-spacing: 1px;">TITAN CONVENIENCE & GROCERY</h2>
                     <div class="line"></div>
                     <div class="flex"><span><b>Bill No:</b> {r['id']}</span></div>
-                    <div class="flex"><span><b>Date/Time:</b> {r['date']}</span></div>
-                    <div class="flex"><span><b>Customer:</b> {r['cust']}</span></div>
+                    <div class="flex"><span><b>Account:</b> {r['cust']}</span></div>
+                    <div class="flex"><span><b>Settle Mode:</b> {r.get('mode', 'Cash')}</span></div>
                     <div class="line"></div>
                     <div style="font-weight: bold; margin-bottom: 8px;" class="flex"><span>Item Allocation</span><span>Subtotal</span></div>
                     {items_html}
@@ -490,24 +535,20 @@ def pos():
                     <div class="flex"><span>Discount:</span> <span>-Rs. {r['disc']:,.2f}</span></div>
                     <div class="flex"><span>Tax (5%):</span> <span>+Rs. {r['tax']:,.2f}</span></div>
                     <div class="line"></div>
-                    <h2 class="flex" style="margin:0; padding-top: 5px;"><span>TOTAL DUED:</span> <span>Rs. {r['tot']:,.2f}</span></h2>
+                    <h2 class="flex" style="margin:0; padding-top: 5px;"><span>TOTAL BILLED:</span> <span>Rs. {r['tot']:,.2f}</span></h2>
                 </div><button class="print-btn" onclick="window.print()">🖨️ Execute Print Routing</button>
             </body></html>"""
             
             st.success("✅ Transaction logged successfully!")
-            
-            st.markdown("### 🧾 System Transaction Receipt")
             st.markdown('<div style="display: flex; justify-content: center; width: 100%; background: #F1F5F9; padding: 20px; border-radius: 12px; margin-bottom: 15px;">', unsafe_allow_html=True)
             components.html(iframe_html, height=560, width=560, scrolling=True)
             st.markdown('</div>', unsafe_allow_html=True)
-            
             if 'pdf' in st.session_state:
                 st.download_button(lang["dl_pdf"], data=st.session_state['pdf'], file_name=st.session_state['pdf_name'], mime="application/pdf", type="primary", use_container_width=True)
 
 def staff():
     st.title(lang["staff"])
     is_main_owner = st.session_state.current_user.get("is_main", False) or st.session_state.current_user.get("username") == "shanmukh"
-    
     if is_main_owner:
         with st.expander("👑 Primary Administrative Privilege: Add Sub-Owners", expanded=True):
             with st.form("add_sub_owner", clear_on_submit=True):
@@ -518,7 +559,6 @@ def staff():
                         db.table("users").insert({"username": new_username, "password_hash": new_password, "role": "Owner", "is_main": False}).execute()
                         st.success(f"Successfully configured Sub-Owner profile for '{new_username}'")
                     else: st.error("Fields cannot be left blank.")
-
     with st.form("new_staff", clear_on_submit=True):
         st.subheader("Register System Cashiers & Workers")
         c1, c2 = st.columns(2)
@@ -527,24 +567,25 @@ def staff():
         if st.form_submit_button(lang["add_staff"], type="primary") and name:
             db.table("staff_list").insert({"id": str(uuid.uuid4())[:8], "name": name, "role": role}).execute()
             st.rerun()
-            
     res = db.table("staff_list").select("*").execute()
     if res.data: st.dataframe(pd.DataFrame(res.data), use_container_width=True, hide_index=True)
 
 # -----------------------------
-# 📈 ADVANCED ANALYTICS INTERFACE
+# 🔮 PREDICTIVE ANALYTICS INTERFACE
 # -----------------------------
 def analytics():
     st.title(lang["analytics"])
     df_sales = fetch_sales_count()
     df_inv = fetch_inventory()
     
-    # 🌟 SUB-TABBING LAYER SEPARATING REVENUE AND WEATHER MATRICES 🌟
-    tab1, tab2 = st.tabs(["💰 Store Performance Audits", "🤖 Predictive Demand Forecasting"])
+    # 🌟 EDITED: WEATHER PREDICTIVE METRICS CONFIGURED AS INTERFACE SUB-TAB 1 (PRIMARY VIEW) 🌟
+    tab1, tab2, tab3 = st.tabs(["🤖 Predictive Demand Forecasting", "💰 Store Performance Audits", "📓 Customer Ledger (Khata Credit Tracker)"])
     
     with tab1:
+        render_weather_predictive_alerts(df_inv)
+
+    with tab2:
         if df_sales.empty: st.info("No transaction telemetry caught."); return
-        
         df_sales['datetime'] = pd.to_datetime(df_sales['date_str'])
         df_sales['date_only'] = df_sales['datetime'].dt.date
         df_sales['hour'] = df_sales['datetime'].dt.hour
@@ -555,21 +596,31 @@ def analytics():
             daily_perf = df_sales.groupby('date_only')['total'].sum().reset_index()
             daily_perf.columns = ['Date', 'Sales (₹)']
             st.bar_chart(daily_perf.set_index('Date'), color="#DC2626")
-            
         with c2:
             st.subheader("⏰ Traffic Density Peak Distribution Hours")
             hourly_perf = df_sales.groupby('hour')['total'].count().reset_index()
             hourly_perf.columns = ['Hour of Day', 'Total Orders Placed']
             st.line_chart(hourly_perf.set_index('Hour of Day'), color="#10B981")
-            
         st.markdown("---")
         st.subheader("📜 Complete Historical Ledger Audits")
-        st.dataframe(df_sales[['id', 'customer', 'total', 'date_str']], use_container_width=True, hide_index=True)
+        st.dataframe(df_sales[['id', 'customer', 'total', 'date_str', 'payment_mode']], use_container_width=True, hide_index=True)
         st.download_button(lang["dl_csv"], data=df_sales.to_csv(index=False).encode('utf-8'), file_name='sales_report.csv', type="primary")
 
-    with tab2:
-        # Render the Predictive Analytics Engine safely in this clean space
-        render_weather_predictive_alerts(df_inv)
+    with tab3:
+        st.subheader("📋 Active Store Credit & Ledger Balance Files")
+        res_cust = db.table("customers").select("*").order("name").execute()
+        if res_cust.data:
+            df_cust = pd.DataFrame(res_cust.data)
+            st.data_editor(
+                df_cust, use_container_width=True, hide_index=True,
+                column_config={
+                    "phone": "Customer Mobile Record",
+                    "name": "Customer Name",
+                    "khata_balance": st.column_config.NumberColumn("Outstanding Balance Due (₹)", format="₹%.2f")
+                }
+            )
+        else:
+            st.info("No localized store credit accounts registered inside the database framework yet.")
 
 # -----------------------------
 # 6. ENFORCED CLOUD AUTHENTICATION LAYER
@@ -585,7 +636,6 @@ else:
             <div class="login-subheader">Authorized Operator Gateway Security Check</div>
         </div>
         """, unsafe_allow_html=True)
-        
         c1, c2, c3 = st.columns([1, 2, 1])
         with c2:
             with st.form("auth_form", clear_on_submit=False):
