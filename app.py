@@ -192,7 +192,7 @@ def get_compressed_base64_image(uploaded_file):
     return None
 
 # -----------------------------
-# 🌟 NEW: LIVE PREDICTIVE WEATHER REVENUE ADVISOR 🌟
+# 🌟 PREDICTIVE WEATHER REVENUE ADVISOR 🌟
 # -----------------------------
 def render_weather_predictive_alerts(df_inv):
     try:
@@ -201,47 +201,52 @@ def render_weather_predictive_alerts(df_inv):
         st.warning("⚠️ OpenWeather API Key missing from your Streamlit workspace environment secrets configuration.")
         return
 
-    lat, lon = "17.3850", "78.4867" # Default Location: Hyderabad
-    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={api_key}&units=metric"
+    url = f"https://api.openweathermap.org/data/2.5/forecast?q=Hyderabad,IN&appid={api_key}&units=metric"
     
     try:
         response = requests.get(url, timeout=4).json()
         forecast_list = response.get("list", [])
-        if not forecast_list: return
         
-        # Calculate weather flags across the incoming 48-hour timeline window
+        if response.get("cod") != "200" or not forecast_list:
+            st.error(f"🌦️ Weather API Error: {response.get('message', 'Invalid API Key or Limit Exceeded')}")
+            return
+        
         max_temp = max([item["main"]["temp_max"] for item in forecast_list[:16]])
         has_rain = any(["rain" in item.get("weather", [{}])[0].get("main", "").lower() for item in forecast_list[:16]])
         
-        st.markdown("### 🤖 Predictive Inventory Demand Engine")
-        
-        # Extract live stock volumes for target groups safely
         coke_row = df_inv[df_inv['id'] == 'coke']
         coke_qty = int(coke_row['quantity'].values[0]) if not coke_row.empty else 0
         
         maggi_row = df_inv[df_inv['id'] == 'maggi']
         maggi_qty = int(maggi_row['quantity'].values[0]) if not maggi_row.empty else 0
         
-        # Predictive Model Execution Logic 
-        if max_temp > 35.0:
+        # Displaying parsed real telemetry data cards
+        c_w1, c_w2 = st.columns(2)
+        c_w1.metric("Calculated 48H Peak Temp", f"{max_temp:.1f}°C")
+        c_w2.metric("Precipitation Inbound", "Yes" if has_rain else "No")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        if max_temp > 25.0:  
             with st.container(border=True):
-                st.error(f"☀️ **High-Temperature Run-Rate Advisory ({max_temp}°C)**")
-                st.write("Atmospheric changes indicate a heatwave incoming over the next 48 hours. Historically, your warehouse beverage categories see an automated **40% sales acceleration spike**.")
+                st.error(f"☀️ **High-Temperature Run-Rate Advisory Active**")
+                st.write(f"Atmospheric changes indicate elevated temperatures across Hyderabad ({max_temp:.1f}°C) over the next 48 hours. Historically, your warehouse beverage categories see an automated **40% sales acceleration spike**.")
                 if coke_qty < 50:
-                    st.warning(f"🚨 **Prescriptive Action Required:** Current `coke` stock is critically low (**{coke_qty} units**). Place an immediate vendor procurement request for **{50 - coke_qty} units** before local delivery timelines expire to protect your seasonal margins.")
+                    st.warning(f"🚨 **Prescriptive Action Required:** Current `coke` stock is low (**{coke_qty} units**). Place an immediate vendor procurement request for **{50 - coke_qty} units** before local delivery timelines expire to protect your seasonal margins.")
                 else:
                     st.success(f"✅ Your beverage stock levels (**{coke_qty} units** of Coke) are adequately prepared for the upcoming surge.")
                     
         elif has_rain:
             with st.container(border=True):
                 st.info("🌧️ **Monsoon Sales Distribution Strategy Triggered**")
-                st.write("Heavy precipitation forms detected ahead. Physical store walking traffic is calculated to contract by **50%**, but comfort meal categories (*Maggi Noodles*) experience a baseline **25% velocity increase**.")
+                st.write("Heavy precipitation forms detected ahead in Telangana. Physical store walking traffic is calculated to contract by **50%**, but comfort meal categories (*Maggi Noodles*) experience a baseline **25% velocity increase**.")
                 if maggi_qty < 60:
                     st.warning(f"📦 **Prescriptive Action Required:** Order an extra crate (**{60 - maggi_qty} packs**) of `maggi` immediately and instruct staff to move packaged noodle stacks to the point-of-sale checkout line counter.")
                 else:
                     st.success(f"✅ Packaged food allocations (**{maggi_qty} units** of Maggi) are fully prepared for high rainy-day consumer traction levels.")
         else:
             st.success("🍏 **Atmospheric Parameters Constant** — Regular storefront run-rates active. No predictive weather restocking rules triggered today.")
+            
     except Exception as e:
         st.caption(f"Predictive Pipeline Telemetry Bypass: {e}")
 
@@ -312,10 +317,6 @@ def dashboard():
         else: st.info("No pipeline logs parsed.")
         
     with col_b:
-        # 🌟 EXECUTE DYNAMIC AI WEATHER ANALYSIS ENGINE HERE 🌟
-        render_weather_predictive_alerts(df_inv)
-        st.markdown("<br>", unsafe_allow_html=True)
-        
         st.subheader("⚠️ Critical Low Stock Warnings")
         low_stock = df_inv[df_inv["quantity"] <= st.session_state["low_stock_threshold"]]
         if not low_stock.empty:
@@ -530,32 +531,45 @@ def staff():
     res = db.table("staff_list").select("*").execute()
     if res.data: st.dataframe(pd.DataFrame(res.data), use_container_width=True, hide_index=True)
 
+# -----------------------------
+# 📈 ADVANCED ANALYTICS INTERFACE
+# -----------------------------
 def analytics():
-    st.title("📈 Advanced Performance Analytics")
+    st.title(lang["analytics"])
     df_sales = fetch_sales_count()
-    if df_sales.empty: st.info("No transaction telemetry caught."); return
+    df_inv = fetch_inventory()
     
-    df_sales['datetime'] = pd.to_datetime(df_sales['date_str'])
-    df_sales['date_only'] = df_sales['datetime'].dt.date
-    df_sales['hour'] = df_sales['datetime'].dt.hour
+    # 🌟 SUB-TABBING LAYER SEPARATING REVENUE AND WEATHER MATRICES 🌟
+    tab1, tab2 = st.tabs(["💰 Store Performance Audits", "🤖 Predictive Demand Forecasting"])
     
-    c1, c2 = st.columns(2)
-    with c1:
-        st.subheader("📅 Gross Revenue Progression")
-        daily_perf = df_sales.groupby('date_only')['total'].sum().reset_index()
-        daily_perf.columns = ['Date', 'Sales (₹)']
-        st.bar_chart(daily_perf.set_index('Date'), color="#DC2626")
+    with tab1:
+        if df_sales.empty: st.info("No transaction telemetry caught."); return
         
-    with c2:
-        st.subheader("⏰ Traffic Density Peak Distribution Hours")
-        hourly_perf = df_sales.groupby('hour')['total'].count().reset_index()
-        hourly_perf.columns = ['Hour of Day', 'Total Orders Placed']
-        st.line_chart(hourly_perf.set_index('Hour of Day'), color="#10B981")
+        df_sales['datetime'] = pd.to_datetime(df_sales['date_str'])
+        df_sales['date_only'] = df_sales['datetime'].dt.date
+        df_sales['hour'] = df_sales['datetime'].dt.hour
         
-    st.markdown("---")
-    st.subheader("📜 Complete Historical Ledger Audits")
-    st.dataframe(df_sales[['id', 'customer', 'total', 'date_str']], use_container_width=True, hide_index=True)
-    st.download_button(lang["dl_csv"], data=df_sales.to_csv(index=False).encode('utf-8'), file_name='sales_report.csv', type="primary")
+        c1, c2 = st.columns(2)
+        with c1:
+            st.subheader("📅 Gross Revenue Progression")
+            daily_perf = df_sales.groupby('date_only')['total'].sum().reset_index()
+            daily_perf.columns = ['Date', 'Sales (₹)']
+            st.bar_chart(daily_perf.set_index('Date'), color="#DC2626")
+            
+        with c2:
+            st.subheader("⏰ Traffic Density Peak Distribution Hours")
+            hourly_perf = df_sales.groupby('hour')['total'].count().reset_index()
+            hourly_perf.columns = ['Hour of Day', 'Total Orders Placed']
+            st.line_chart(hourly_perf.set_index('Hour of Day'), color="#10B981")
+            
+        st.markdown("---")
+        st.subheader("📜 Complete Historical Ledger Audits")
+        st.dataframe(df_sales[['id', 'customer', 'total', 'date_str']], use_container_width=True, hide_index=True)
+        st.download_button(lang["dl_csv"], data=df_sales.to_csv(index=False).encode('utf-8'), file_name='sales_report.csv', type="primary")
+
+    with tab2:
+        # Render the Predictive Analytics Engine safely in this clean space
+        render_weather_predictive_alerts(df_inv)
 
 # -----------------------------
 # 6. ENFORCED CLOUD AUTHENTICATION LAYER
