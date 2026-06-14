@@ -62,7 +62,7 @@ T = {
         "staff_name": "पूरा नाम", "role": "भूमिका", "add_staff": "स्टाफ सदस्य जोड़ें", "dl_csv": "📥 CSV निर्यात करें"
     },
     "Telugu": {
-        "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంటరీ మేనేజ్‌మెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
+        "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంటరీ మేనేజెమెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
         "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "🔮 ప్రిడిక్టివ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
         "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
@@ -391,15 +391,14 @@ def pos():
     with col1:
         chosen_cat = st.radio("Quick Filters By Department Tag", ["All", "Drinks", "Snacks", "Dairy", "General"], index=0, horizontal=True)
         
- # 🌟 FIXED: Added isolated key token to force real-time keystroke evaluation 🌟
+        # 🌟 FIXED: Keystroke capturing token is assigned to track modifications instantly 🌟
         search = st.text_input(lang["search"], value="", key="pos_live_search", autocomplete="off")
         
-        display_df = df_inv
+        display_df = df_inv.copy()
         if chosen_cat != "All":
             display_df = display_df[display_df['category'] == chosen_cat]
             
         if search.strip():
-            # Force string alignment to prevent matching omissions
             search_query = search.strip().lower()
             display_df = display_df[
                 display_df['name'].str.lower().str.contains(search_query, na=False) | 
@@ -407,31 +406,34 @@ def pos():
                 display_df['id'].str.lower().str.contains(search_query, na=False)
             ]
 
-        cols = st.columns(3)
-        for idx, row in display_df.reset_index().iterrows():
-            with cols[idx % 3]:
-                with st.container(border=True):
-                    if pd.notna(row.get('image')) and row['image']: 
-                        st.image(row['image'], use_container_width=True)
-                    else:
-                        st.markdown("<div style='height:140px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#94A3B8; margin-bottom:8px;'>No Image</div>", unsafe_allow_html=True)
-                    
-                    st.markdown(f"**{row['name']}**")
-                    st.caption(f"ID: `{row['id']}` | Tag: `{row['category']}`")
-                    
-                    color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else "gray"
-                    st.markdown(f"<span style='color:{color}'>{lang['stock']}: {row['quantity']}</span>", unsafe_allow_html=True)
-                    st.markdown(f"#### ₹{row['price']:,.2f}")
-                    
-                    qty = st.number_input("Q", 1, max(int(row['quantity']), 1), key=f"q_{row['id']}", label_visibility="collapsed")
-                    if st.button(lang["add"], key=f"b_{row['id']}", type="primary", use_container_width=True):
-                        if row['quantity'] >= qty:
-                            item = next((i for i in st.session_state.cart if i["id"] == row["id"]), None)
-                            if item:
-                                item["quantity"] += qty; item["subtotal"] = item["price"] * item["quantity"]
-                            else:
-                                st.session_state.cart.append({"id": row["id"], "name": row["name"], "price": row["price"], "quantity": qty, "subtotal": row["price"] * qty})
-                            st.rerun()
+        if display_df.empty:
+            st.info("No matching product items found.")
+        else:
+            cols = st.columns(3)
+            for idx, row in display_df.reset_index().iterrows():
+                with cols[idx % 3]:
+                    with st.container(border=True):
+                        if pd.notna(row.get('image')) and row['image']: 
+                            st.image(row['image'], use_container_width=True)
+                        else:
+                            st.markdown("<div style='height:140px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#94A3B8; margin-bottom:8px;'>No Image</div>", unsafe_allow_html=True)
+                        
+                        st.markdown(f"**{row['name']}**")
+                        st.caption(f"ID: `{row['id']}` | Tag: `{row['category']}`")
+                        
+                        color = "#ef4444" if row['quantity'] <= st.session_state.low_stock_threshold else "gray"
+                        st.markdown(f"<span style='color:{color}'>{lang['stock']}: {row['quantity']}</span>", unsafe_allow_html=True)
+                        st.markdown(f"#### ₹{row['price']:,.2f}")
+                        
+                        qty = st.number_input("Q", 1, max(int(row['quantity']), 1), key=f"q_{row['id']}", label_visibility="collapsed")
+                        if st.button(lang["add"], key=f"b_{row['id']}", type="primary", use_container_width=True):
+                            if row['quantity'] >= qty:
+                                item = next((i for i in st.session_state.cart if i["id"] == row["id"]), None)
+                                if item:
+                                    item["quantity"] += qty; item["subtotal"] = item["price"] * item["quantity"]
+                                else:
+                                    st.session_state.cart.append({"id": row["id"], "name": row["name"], "price": row["price"], "quantity": qty, "subtotal": row["price"] * qty})
+                                st.rerun()
 
     with col2:
         with st.container(border=True):
@@ -457,7 +459,7 @@ def pos():
                 st.markdown("##### 👥 Customer Transaction Routing")
                 customer_input = st.text_input(lang["cust"], value="Walk-in").strip()
                 
-                # 🌟 UPDATED: CARD INTEGRATED INTO THE CORE PAYMENT MATRIX LAYOUT 🌟
+                # 🌟 UPDATED: CARD INTEGRATED INTO THE SETTLEMENT OPTIONS MATRIX 🌟
                 payment_mode = st.radio("Settle Payment Mode", ["Cash / UPI", "Card", "Khata Store Credit"], horizontal=True)
                 
                 customer_profile = None
@@ -575,6 +577,7 @@ def analytics():
     df_sales = fetch_sales_count()
     df_inv = fetch_inventory()
     
+    # 🔮 WEATHER FORECASTING TAB SET AS THE PROMINENT TAB 1 DEFAULT VIEW 🔮
     tab1, tab2, tab3 = st.tabs(["🤖 Predictive Demand Forecasting", "💰 Store Performance Audits", "📓 Customer Ledger (Khata Credit Tracker)"])
     
     with tab1:
