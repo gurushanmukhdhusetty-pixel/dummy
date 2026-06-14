@@ -22,41 +22,41 @@ st.set_page_config(page_title="Titan Inventory & POS System", page_icon="🛒", 
 logging.basicConfig(level=logging.INFO)
 
 # -----------------------------
-# 1. FIXED FAST2SMS WORKFLOW LOGIC (WITH COUNTRY CODE AUTO-APPEND)
+# 1. FIXED FAST2SMS WORKFLOW LOGIC (DOMESTIC FALLBACK ROUTE)
 # -----------------------------
 FAST2SMS_API_KEY = "UxoZARPvI9wTO2HksEmYLSp5KcthfzbXCQ10gdirnqNeVjlF7Jy2utkdHZ8hMVswOliInc59mYFBDUGT"
 FAST2SMS_URL = "https://www.fast2sms.com/dev/bulkV2"
 
 def trigger_sms_bill_delivery(phone_number, total_amount, business_name="Titan Store"):
     """
-    Dispatches a real-time transactional text using Fast2SMS Quick Route ('q').
-    Bypasses mandatory local telecom domestic DLT registrations via international loop.
-    Enforces the required '91' international prefix formatting.
+    Dispatches a real-time transactional text using Fast2SMS.
+    Switches to fallback domestic routing to ensure delivery on local networks.
     """
-    # Strip out any spaces, dashes, or non-numeric symbols
+    # Clean number down to basic numeric characters
     clean_phone = "".join(filter(str.isdigit, str(phone_number)))
     
-    # Enforce absolute 91 Indian Country Prefix format for international routing
-    if len(clean_phone) == 10:
-        clean_phone = f"91{clean_phone}"
-    elif len(clean_phone) == 12 and clean_phone.startswith("91"):
-        pass # Already perfectly formatted
-    else:
-        logging.warning(f"Aborting SMS: Invalid phone layout footprint: {phone_number}")
+    # Fast2SMS domestic routes expect a plain 10-digit format (No 91 prefix)
+    if len(clean_phone) == 12 and clean_phone.startswith("91"):
+        clean_phone = clean_phone[2:]
+    elif len(clean_phone) != 10:
+        logging.warning(f"Aborting SMS: Invalid phone layout: {phone_number}")
         return False, "Invalid Phone Number Format"
 
+    # Create a clean message body
     message_text = f"Total Due: Rs {total_amount:,.2f}. Thanks for shopping at {business_name}!"
     
     payload = {
         "authorization": FAST2SMS_API_KEY,
-        "route": "q",
+        "route": "dlt",              # Changed to use domestic transactional routing
+        "sender_id": "FSTSMS",       # Uses the pre-approved public system header
         "message": message_text,
         "numbers": clean_phone
     }
     
     try:
-        logging.info(f"Pinging Fast2SMS cloud gateway for formatted phone: {clean_phone}...")
-        response = requests.get(FAST2SMS_URL, params=payload, timeout=8)
+        logging.info(f"Pinging Fast2SMS domestic gateway for phone: {clean_phone}...")
+        # Using a POST request to ensure parameters aren't cut off by telecom firewalls
+        response = requests.post(FAST2SMS_URL, data=payload, timeout=8)
         res_json = response.json()
         
         if res_json.get("return") is True:
@@ -116,7 +116,7 @@ T = {
     "Telugu": {
         "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంతరీ మేనేజ్మెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
         "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "🔮 ప్రిడిక్టివ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
-        "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
+        "login_btn": "లాగిన్", "user": "विनीयोगदारु पेरु", "pass": "पासवर्ड",
         "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
         "add_prod": "➕ కొత్త ఉత్పత్తిని చేర్చండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్ / SKU",
         "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఉత్పత్తి ఫోటో అప్‌లోడ్", "save": "డేటాబేస్‌లో సేవ్ చేయి",
@@ -472,13 +472,12 @@ def pos():
                     db.table("sales").insert({"id": s_id, "customer": customer_input, "total": total, "date_str": d_str, "payment_mode": payment_mode}).execute()
                     st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": customer_input, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total, "mode": payment_mode}
                     
-                    # 🚀 TRIGGER FAST2SMS AUTOMATED TRANSACTIONAL BILL ROUTING (WITH NEW PREFIX PROTECTION) 🚀
-                    # Checks for string logic lengths now handled inside the function directly
+                    # 🚀 TRIGGER FAST2SMS DOMESTIC SYSTEM ROUTE 🚀
                     sms_success, sms_log = trigger_sms_bill_delivery(phone_number=customer_input, total_amount=total)
                     if sms_success:
-                        st.toast(f"💬 Bill text dispatched successfully to {customer_input}!", icon="✅")
+                        st.toast(f"💬 Real-time bill sent over SMS to {customer_input}!", icon="✅")
                     else:
-                        st.toast(f"⚠️ SMS Route Skipped: {sms_log}", icon="ℹ️")
+                        st.toast(f"ℹ️ SMS Delivery skipped: {sms_log}", icon="📝")
 
                     if PDF_READY:
                         st.session_state['pdf'] = generate_pdf(s_id, d_str, customer_input, st.session_state.cart, subtotal, disc_amt, tax_amt, total, payment_mode)
