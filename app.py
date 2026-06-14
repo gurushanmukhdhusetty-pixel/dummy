@@ -22,7 +22,7 @@ st.set_page_config(page_title="Titan Inventory & POS System", page_icon="🛒", 
 logging.basicConfig(level=logging.INFO)
 
 # -----------------------------
-# 1. FIXED FAST2SMS WORKFLOW LOGIC
+# 1. FIXED FAST2SMS WORKFLOW LOGIC (WITH COUNTRY CODE AUTO-APPEND)
 # -----------------------------
 FAST2SMS_API_KEY = "UxoZARPvI9wTO2HksEmYLSp5KcthfzbXCQ10gdirnqNeVjlF7Jy2utkdHZ8hMVswOliInc59mYFBDUGT"
 FAST2SMS_URL = "https://www.fast2sms.com/dev/bulkV2"
@@ -31,12 +31,19 @@ def trigger_sms_bill_delivery(phone_number, total_amount, business_name="Titan S
     """
     Dispatches a real-time transactional text using Fast2SMS Quick Route ('q').
     Bypasses mandatory local telecom domestic DLT registrations via international loop.
+    Enforces the required '91' international prefix formatting.
     """
-    # Clean up phone numbers to ensure they are 10-digit integers
+    # Strip out any spaces, dashes, or non-numeric symbols
     clean_phone = "".join(filter(str.isdigit, str(phone_number)))
-    if len(clean_phone) != 10:
-        logging.warning(f"Aborting SMS: Invalid phone string footprint parsed: {phone_number}")
-        return False, "Invalid Phone String Length"
+    
+    # Enforce absolute 91 Indian Country Prefix format for international routing
+    if len(clean_phone) == 10:
+        clean_phone = f"91{clean_phone}"
+    elif len(clean_phone) == 12 and clean_phone.startswith("91"):
+        pass # Already perfectly formatted
+    else:
+        logging.warning(f"Aborting SMS: Invalid phone layout footprint: {phone_number}")
+        return False, "Invalid Phone Number Format"
 
     message_text = f"Total Due: Rs {total_amount:,.2f}. Thanks for shopping at {business_name}!"
     
@@ -48,7 +55,7 @@ def trigger_sms_bill_delivery(phone_number, total_amount, business_name="Titan S
     }
     
     try:
-        logging.info(f"Pinging Fast2SMS cloud gateway for phone: {clean_phone}...")
+        logging.info(f"Pinging Fast2SMS cloud gateway for formatted phone: {clean_phone}...")
         response = requests.get(FAST2SMS_URL, params=payload, timeout=8)
         res_json = response.json()
         
@@ -107,7 +114,7 @@ T = {
         "staff_name": "पूरा नाम", "role": "भूमिका", "add_staff": "स्टाफ सदस्य जोड़ें", "dl_csv": "📥 CSV निर्यात करें"
     },
     "Telugu": {
-        "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెنتరీ మేనేజెమెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
+        "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంతరీ మేనేజ్మెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
         "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "🔮 ప్రిడిక్టివ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
         "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
@@ -133,87 +140,6 @@ if "last_receipt" not in st.session_state: st.session_state["last_receipt"] = No
 if "current_page" not in st.session_state: st.session_state["current_page"] = "pos"
 
 lang = T[st.session_state["lang"]]
-
-st.markdown("""
-<style>
-.stApp {
-    background: linear-gradient(135deg, #E0E7FF 0%, #EDE9FE 100%) !important;
-    color: #1E293B !important;
-}
-h1, h2, h3, .stApp h1, .stApp h2, .stApp h3, [data-testid="stMetricLabel"] {
-    color: #DC2626 !important; 
-    font-weight: 700 !important;
-}
-.stApp p, .stApp span, label { 
-    color: #1E293B !important; 
-}
-button[kind="primary"] {
-    background-color: #DC2626 !important; 
-    color: #FFFFFF !important;
-    border: none !important;
-    font-weight: bold !important;
-    padding: 12px 24px !important;
-}
-button[kind="primary"]:hover {
-    background-color: #991B1B !important;
-}
-button[kind="secondary"] {
-    background-color: #FFFFFF !important;
-    color: #4338CA !important; 
-    border: 1px solid #C7D2FE !important;
-}
-.login-container {
-    background: #FFFFFF !important;
-    padding: 35px 25px !important;
-    border-radius: 16px !important;
-    border-top: 6px solid #DC2626 !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
-    width: 100% !important;
-    max-width: 420px !important;
-    margin: 40px auto !important;
-    text-align: center;
-}
-.login-header { font-size: 24px !important; font-weight: 800 !important; color: #1E293B !important; }
-.login-subheader { font-size: 14px !important; color: #64748B !important; margin-bottom: 25px !important; }
-
-div[data-baseweb="input"] input, .stNumberInput input, .stTextInput input {
-    background-color: #FFFFFF !important;
-    color: #1E293B !important;
-    border: 1px solid #CBD5E1 !important;
-    padding: 10px 14px !important;
-    font-size: 16px !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"] > div {
-    min-height: 410px !important;
-    max-height: 410px !important;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-[data-testid="metric-container"] { 
-    background: #FFFFFF !important; 
-    border: 1px solid #E2E8F0 !important; 
-    padding: 20px !important; 
-    border-radius: 12px !important; 
-    border-top: 4px solid #DC2626 !important; 
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important;
-}
-[data-testid="stSidebarUserContent"] {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    height: calc(100vh - 60px) !important;
-}
-.user-profile-badge {
-    background-color: #FFFFFF !important;
-    border-left: 4px solid #DC2626 !important;
-    padding: 12px 16px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
-    margin-bottom: 15px !important;
-}
-</style>
-""", unsafe_allow_html=True)
 
 def fetch_inventory():
     res = db.table("inventory").select("*").order("name").execute()
@@ -546,15 +472,13 @@ def pos():
                     db.table("sales").insert({"id": s_id, "customer": customer_input, "total": total, "date_str": d_str, "payment_mode": payment_mode}).execute()
                     st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": customer_input, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total, "mode": payment_mode}
                     
-                    # 🚀 TRIGGER FAST2SMS AUTOMATED TRANSACTIONAL BILL ROUTING 🚀
-                    if customer_input != "Walk-in" and len(customer_input) == 10 and customer_input.isdigit():
-                        sms_success, sms_log = trigger_sms_bill_delivery(phone_number=customer_input, total_amount=total)
-                        if sms_success:
-                            st.toast(f"💬 Real-time bill sent over SMS to {customer_input}!", icon="✅")
-                        else:
-                            st.toast(f"⚠️ SMS Delivery skipped: {sms_log}", icon="❌")
+                    # 🚀 TRIGGER FAST2SMS AUTOMATED TRANSACTIONAL BILL ROUTING (WITH NEW PREFIX PROTECTION) 🚀
+                    # Checks for string logic lengths now handled inside the function directly
+                    sms_success, sms_log = trigger_sms_bill_delivery(phone_number=customer_input, total_amount=total)
+                    if sms_success:
+                        st.toast(f"💬 Bill text dispatched successfully to {customer_input}!", icon="✅")
                     else:
-                        st.toast("ℹ️ SMS skipped: No valid 10-digit customer number provided.", icon="📝")
+                        st.toast(f"⚠️ SMS Route Skipped: {sms_log}", icon="ℹ️")
 
                     if PDF_READY:
                         st.session_state['pdf'] = generate_pdf(s_id, d_str, customer_input, st.session_state.cart, subtotal, disc_amt, tax_amt, total, payment_mode)
