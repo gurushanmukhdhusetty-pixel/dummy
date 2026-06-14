@@ -1,5 +1,3 @@
-import logging
-import requests
 import streamlit as st
 import pandas as pd
 import uuid
@@ -8,6 +6,7 @@ from datetime import datetime
 import streamlit.components.v1 as components
 from PIL import Image
 import io
+import requests
 
 # --- COMPULSORY LIBRARIES VALIDATION ---
 try:
@@ -18,59 +17,50 @@ except ImportError:
 
 st.set_page_config(page_title="Titan Inventory & POS System", page_icon="🛒", layout="wide", initial_sidebar_state="expanded")
 
-# --- CONFIGURE LOGGING METRICS ---
-logging.basicConfig(level=logging.INFO)
-
 # -----------------------------
-# 1. FIXED FAST2SMS WORKFLOW LOGIC (DOMESTIC FALLBACK ROUTE)
+# BACKEND CORE PIPELINE: QUICK SMS API INTEGRATION
 # -----------------------------
 FAST2SMS_API_KEY = "UxoZARPvI9wTO2HksEmYLSp5KcthfzbXCQ10gdirnqNeVjlF7Jy2utkdHZ8hMVswOliInc59mYFBDUGT"
 FAST2SMS_URL = "https://www.fast2sms.com/dev/bulkV2"
 
-def trigger_sms_bill_delivery(phone_number, total_amount, business_name="Titan Store"):
+def trigger_sms_bill_delivery(phone_input, order_id, total_amount):
     """
-    Dispatches a real-time transactional text using Fast2SMS.
-    Switches to fallback domestic routing to ensure delivery on local networks.
+    Sends a transactional notification using the Fast2SMS Quick SMS international gateway ('route=q').
+    Formats text using the user's explicit structural template parameters.
     """
-    # Clean number down to basic numeric characters
-    clean_phone = "".join(filter(str.isdigit, str(phone_number)))
+    # Clean the input to keep only numeric values
+    clean_phone = "".join(filter(str.isdigit, str(phone_input)))
     
-    # Fast2SMS domestic routes expect a plain 10-digit format (No 91 prefix)
+    # Fast2SMS Quick SMS route handles 10-digit formats elegantly 
     if len(clean_phone) == 12 and clean_phone.startswith("91"):
         clean_phone = clean_phone[2:]
-    elif len(clean_phone) != 10:
-        logging.warning(f"Aborting SMS: Invalid phone layout: {phone_number}")
-        return False, "Invalid Phone Number Format"
+        
+    if len(clean_phone) != 10:
+        return False  # Silently skip if it's not a valid 10-digit number (e.g. "Walk-in")
 
-    # Create a clean message body
-    message_text = f"Total Due: Rs {total_amount:,.2f}. Thanks for shopping at {business_name}!"
+    # Custom text template string footprint matching target instructions exactly
+    message_text = (
+        f"dear customer thanks for shooping at titan stores \n"
+        f"please find order id and amount fro refernces \n\n"
+        f"Order ID: {order_id}\n"
+        f"Amount: Rs. {total_amount:,.2f}"
+    )
     
     payload = {
         "authorization": FAST2SMS_API_KEY,
-        "route": "dlt",              # Changed to use domestic transactional routing
-        "sender_id": "FSTSMS",       # Uses the pre-approved public system header
+        "route": "q",
         "message": message_text,
         "numbers": clean_phone
     }
     
     try:
-        logging.info(f"Pinging Fast2SMS domestic gateway for phone: {clean_phone}...")
-        # Using a POST request to ensure parameters aren't cut off by telecom firewalls
-        response = requests.post(FAST2SMS_URL, data=payload, timeout=8)
-        res_json = response.json()
-        
-        if res_json.get("return") is True:
-            logging.info(f"Transactional notification dispatched. Req ID: {res_json.get('request_id')}")
-            return True, res_json
-        else:
-            logging.error(f"Gateway execution error rejected: {res_json.get('message')}")
-            return False, res_json.get("message")
-    except Exception as e:
-        logging.error(f"Failed to cleanly communicate with message gateway servers: {e}")
-        return False, str(e)
+        response = requests.get(FAST2SMS_URL, params=payload, timeout=8)
+        return response.json().get("return", False)
+    except Exception:
+        return False
 
 # -----------------------------
-# 2. STRICT SUPABASE ENVIRONMENT CONNECTION
+# 1. STRICT SUPABASE ENVIRONMENT CONNECTION
 # -----------------------------
 try:
     from supabase import create_client
@@ -84,7 +74,7 @@ except Exception as e:
     CONNECTION_ERROR = str(e)
 
 # -----------------------------
-# 3. TRANSLATION INTERFACE MAP
+# 2. TRANSLATION INTERFACE MAP
 # -----------------------------
 T = {
     "English": {
@@ -114,9 +104,9 @@ T = {
         "staff_name": "पूरा नाम", "role": "भूमिका", "add_staff": "स्टाफ सदस्य जोड़ें", "dl_csv": "📥 CSV निर्यात करें"
     },
     "Telugu": {
-        "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంతరీ మేనేజ్మెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
+        "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంతరీ మేనేజెమెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
         "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "🔮 ప్రిడిక్టివ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
-        "login_btn": "లాగిన్", "user": "विनीयोगदारु पेरु", "pass": "पासवर्ड",
+        "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
         "add_prod": "➕ కొత్త ఉత్పత్తిని చేర్చండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్ / SKU",
         "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఉత్పత్తి ఫోటో అప్‌లోడ్", "save": "డేటాబేస్‌లో సేవ్ చేయి",
@@ -129,7 +119,7 @@ T = {
 }
 
 # -----------------------------
-# 4. RUNTIME INITIALIZATION
+# 3. RUNTIME INITIALIZATION
 # -----------------------------
 if "logged_in" not in st.session_state: st.session_state["logged_in"] = False
 if "current_user" not in st.session_state: st.session_state["current_user"] = None
@@ -140,6 +130,87 @@ if "last_receipt" not in st.session_state: st.session_state["last_receipt"] = No
 if "current_page" not in st.session_state: st.session_state["current_page"] = "pos"
 
 lang = T[st.session_state["lang"]]
+
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(135deg, #E0E7FF 0%, #EDE9FE 100%) !important;
+    color: #1E293B !important;
+}
+h1, h2, h3, .stApp h1, .stApp h2, .stApp h3, [data-testid="stMetricLabel"] {
+    color: #DC2626 !important; 
+    font-weight: 700 !important;
+}
+.stApp p, .stApp span, label { 
+    color: #1E293B !important; 
+}
+button[kind="primary"] {
+    background-color: #DC2626 !important; 
+    color: #FFFFFF !important;
+    border: none !important;
+    font-weight: bold !important;
+    padding: 12px 24px !important;
+}
+button[kind="primary"]:hover {
+    background-color: #991B1B !important;
+}
+button[kind="secondary"] {
+    background-color: #FFFFFF !important;
+    color: #4338CA !important; 
+    border: 1px solid #C7D2FE !important;
+}
+.login-container {
+    background: #FFFFFF !important;
+    padding: 35px 25px !important;
+    border-radius: 16px !important;
+    border-top: 6px solid #DC2626 !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    margin: 40px auto !important;
+    text-align: center;
+}
+.login-header { font-size: 24px !important; font-weight: 800 !important; color: #1E293B !important; }
+.login-subheader { font-size: 14px !important; color: #64748B !important; margin-bottom: 25px !important; }
+
+div[data-baseweb="input"] input, .stNumberInput input, .stTextInput input {
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+    border: 1px solid #CBD5E1 !important;
+    padding: 10px 14px !important;
+    font-size: 16px !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"] > div {
+    min-height: 410px !important;
+    max-height: 410px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+[data-testid="metric-container"] { 
+    background: #FFFFFF !important; 
+    border: 1px solid #E2E8F0 !important; 
+    padding: 20px !important; 
+    border-radius: 12px !important; 
+    border-top: 4px solid #DC2626 !important; 
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important;
+}
+[data-testid="stSidebarUserContent"] {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: calc(100vh - 60px) !important;
+}
+.user-profile-badge {
+    background-color: #FFFFFF !important;
+    border-left: 4px solid #DC2626 !important;
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
+    margin-bottom: 15px !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 def fetch_inventory():
     res = db.table("inventory").select("*").order("name").execute()
@@ -222,7 +293,7 @@ def render_weather_predictive_alerts(df_inv):
         st.caption(f"Predictive Pipeline Telemetry Bypass: {e}")
 
 # -----------------------------
-# 5. INVOICE GENERATOR
+# 4. INVOICE GENERATOR
 # -----------------------------
 def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, total, pay_mode="Cash"):
     if not PDF_READY: return None
@@ -252,10 +323,11 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
     pdf.line(130, pdf.get_y(), 200, pdf.get_y()); pdf.ln(2); pdf.set_font("Arial", 'B', 14)
     pdf.cell(120, 8, "", 0, 0); pdf.cell(35, 8, "GRAND TOTAL:", 0, 0, 'R'); pdf.cell(35, 8, f"{total:,.2f} ", 0, 1, 'R')
     
+    # 🌟 INDENTATION ALIGNED ACCORDING TO FUNCTION PROTOCOLS 🌟
     return bytes(pdf.output())
 
 # -----------------------------
-# 6. CORE INTERFACE PAGES
+# 5. CORE INTERFACE PAGES
 # -----------------------------
 def dashboard():
     st.title(lang["dash"])
@@ -362,6 +434,8 @@ def pos():
     col1, col2 = st.columns([2.0, 1.2])
     with col1:
         chosen_cat = st.radio("Quick Filters By Department Tag", ["All", "Drinks", "Snacks", "Dairy", "General"], index=0, horizontal=True)
+        
+        # 🌟 FIXED STATE HOOK: REAL-TIME KEYSTROKE EVALUATION ACTIVE 🌟
         search = st.text_input(lang["search"], value="", key="pos_live_search", autocomplete="off")
         
         display_df = df_inv.copy()
@@ -460,7 +534,6 @@ def pos():
                         st.error("🛑 Request Refused: An active valid Customer Profile record is mandatory for credit bookkeeping ledger inputs.")
                         return
                     
-                    # Update stock allocation numbers inside database
                     for c_item in st.session_state.cart:
                         current_stock = df_inv[df_inv['id'] == c_item['id']]['quantity'].values[0]
                         db.table("inventory").update({"quantity": int(current_stock - c_item['quantity'])}).eq("id", c_item['id']).execute()
@@ -472,12 +545,8 @@ def pos():
                     db.table("sales").insert({"id": s_id, "customer": customer_input, "total": total, "date_str": d_str, "payment_mode": payment_mode}).execute()
                     st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": customer_input, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total, "mode": payment_mode}
                     
-                    # 🚀 TRIGGER FAST2SMS DOMESTIC SYSTEM ROUTE 🚀
-                    sms_success, sms_log = trigger_sms_bill_delivery(phone_number=customer_input, total_amount=total)
-                    if sms_success:
-                        st.toast(f"💬 Real-time bill sent over SMS to {customer_input}!", icon="✅")
-                    else:
-                        st.toast(f"ℹ️ SMS Delivery skipped: {sms_log}", icon="📝")
+                    # 🚀 TRIGGER FAST2SMS AUTOMATED TRANSACTIONS REAL-TIME OUTBOUND ROUTE 🚀
+                    trigger_sms_bill_delivery(phone_input=customer_input, order_id=s_id, total_amount=total)
 
                     if PDF_READY:
                         st.session_state['pdf'] = generate_pdf(s_id, d_str, customer_input, st.session_state.cart, subtotal, disc_amt, tax_amt, total, payment_mode)
