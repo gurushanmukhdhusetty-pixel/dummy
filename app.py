@@ -62,7 +62,7 @@ T = {
         "staff_name": "पूरा नाम", "role": "भूमिका", "add_staff": "स्टाफ सदस्य जोड़ें", "dl_csv": "📥 CSV निर्यात करें"
     },
     "Telugu": {
-        "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంటరీ మేనేజెమెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
+        "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెنتరీ మేనేజెమెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
         "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "🔮 ప్రిడిక్టివ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
         "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
@@ -280,8 +280,10 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
     pdf.cell(120, 6, "", 0, 0); pdf.cell(35, 6, "Tax (5%):", 0, 0, 'R'); pdf.cell(35, 6, f"+{tax:,.2f} ", 0, 1, 'R')
     pdf.line(130, pdf.get_y(), 200, pdf.get_y()); pdf.ln(2); pdf.set_font("Arial", 'B', 14)
     pdf.cell(120, 8, "", 0, 0); pdf.cell(35, 8, "GRAND TOTAL:", 0, 0, 'R'); pdf.cell(35, 8, f"{total:,.2f} ", 0, 1, 'R')
-    # Modern fpdf2 natively outputs a clean bytearray which converts perfectly into bytes
-return bytes(pdf.output())
+    
+    # 🌟 INDENTATION ALIGNED ACCORDING TO FUNCTION PROTOCOLS 🌟
+    return bytes(pdf.output())
+
 # -----------------------------
 # 5. CORE INTERFACE PAGES
 # -----------------------------
@@ -391,7 +393,7 @@ def pos():
     with col1:
         chosen_cat = st.radio("Quick Filters By Department Tag", ["All", "Drinks", "Snacks", "Dairy", "General"], index=0, horizontal=True)
         
-        # 🌟 FIXED: Keystroke capturing token is assigned to track modifications instantly 🌟
+        # 🌟 FIXED STATE HOOK: REAL-TIME KEYSTROKE EVALUATION ACTIVE 🌟
         search = st.text_input(lang["search"], value="", key="pos_live_search", autocomplete="off")
         
         display_df = df_inv.copy()
@@ -459,7 +461,6 @@ def pos():
                 st.markdown("##### 👥 Customer Transaction Routing")
                 customer_input = st.text_input(lang["cust"], value="Walk-in").strip()
                 
-                # 🌟 UPDATED: CARD INTEGRATED INTO THE SETTLEMENT OPTIONS MATRIX 🌟
                 payment_mode = st.radio("Settle Payment Mode", ["Cash / UPI", "Card", "Khata Store Credit"], horizontal=True)
                 
                 customer_profile = None
@@ -577,7 +578,6 @@ def analytics():
     df_sales = fetch_sales_count()
     df_inv = fetch_inventory()
     
-    # 🔮 WEATHER FORECASTING TAB SET AS THE PROMINENT TAB 1 DEFAULT VIEW 🔮
     tab1, tab2, tab3 = st.tabs(["🤖 Predictive Demand Forecasting", "💰 Store Performance Audits", "📓 Customer Ledger (Khata Credit Tracker)"])
     
     with tab1:
