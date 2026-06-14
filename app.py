@@ -280,8 +280,8 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
     pdf.cell(120, 6, "", 0, 0); pdf.cell(35, 6, "Tax (5%):", 0, 0, 'R'); pdf.cell(35, 6, f"+{tax:,.2f} ", 0, 1, 'R')
     pdf.line(130, pdf.get_y(), 200, pdf.get_y()); pdf.ln(2); pdf.set_font("Arial", 'B', 14)
     pdf.cell(120, 8, "", 0, 0); pdf.cell(35, 8, "GRAND TOTAL:", 0, 0, 'R'); pdf.cell(35, 8, f"{total:,.2f} ", 0, 1, 'R')
-    return bytes(pdf.output(dest='S'), 'latin-1')
-
+    # Modern fpdf2 natively outputs a clean bytearray which converts perfectly into bytes
+return bytes(pdf.output())
 # -----------------------------
 # 5. CORE INTERFACE PAGES
 # -----------------------------
