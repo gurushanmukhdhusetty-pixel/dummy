@@ -389,9 +389,9 @@ def pos():
 
     col1, col2 = st.columns([2.0, 1.2])
     with col1:
-        # 🌟 BACKWARDS COMPATIBLE FIX: SWAPPED ST.PILLS FOR HORIZONTAL RADIO TABS 🌟
         chosen_cat = st.radio("Quick Filters By Department Tag", ["All", "Drinks", "Snacks", "Dairy", "General"], index=0, horizontal=True)
         
+        # 🌟 INSTANT SEARCH AS YOU TYPE FIELD TRIGGERED ON EVERY SINGLE CHAR INPUT 🌟
         search = st.text_input(lang["search"], value="", autocomplete="off")
         
         display_df = df_inv
@@ -455,7 +455,8 @@ def pos():
                 st.markdown("##### 👥 Customer Transaction Routing")
                 customer_input = st.text_input(lang["cust"], value="Walk-in").strip()
                 
-                payment_mode = st.radio("Settle Payment Mode", ["Cash / UPI", "Khata Store Credit"], horizontal=True)
+                # 🌟 UPDATED: CARD INTEGRATED INTO THE CORE PAYMENT MATRIX LAYOUT 🌟
+                payment_mode = st.radio("Settle Payment Mode", ["Cash / UPI", "Card", "Khata Store Credit"], horizontal=True)
                 
                 customer_profile = None
                 if customer_input != "Walk-in" and customer_input:
@@ -594,19 +595,19 @@ def analytics():
             hourly_perf = df_sales.groupby('hour')['total'].count().reset_index()
             hourly_perf.columns = ['Hour of Day', 'Total Orders Placed']
             st.line_chart(hourly_perf.set_index('Hour of Day'), color="#10B981")
+            
         st.markdown("---")
         st.subheader("📜 Complete Historical Ledger Audits")
         
-        # 🌟 FIXED: Safety check to inject the missing column if old rows don't have it yet 🌟
         if 'payment_mode' not in df_sales.columns:
             df_sales['payment_mode'] = "Cash / UPI"
             
-        # Ensure fallback column matching to prevent Pandas KeyError crashes
         cols_to_show = ['id', 'customer', 'total', 'date_str', 'payment_mode']
         available_cols = [c for c in cols_to_show if c in df_sales.columns]
         
         st.dataframe(df_sales[available_cols], use_container_width=True, hide_index=True)
         st.download_button(lang["dl_csv"], data=df_sales.to_csv(index=False).encode('utf-8'), file_name='sales_report.csv', type="primary")
+
     with tab3:
         st.subheader("📋 Active Store Credit & Ledger Balance Files")
         res_cust = db.table("customers").select("*").order("name").execute()
