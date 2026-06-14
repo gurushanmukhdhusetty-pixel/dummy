@@ -596,9 +596,17 @@ def analytics():
             st.line_chart(hourly_perf.set_index('Hour of Day'), color="#10B981")
         st.markdown("---")
         st.subheader("📜 Complete Historical Ledger Audits")
-        st.dataframe(df_sales[['id', 'customer', 'total', 'date_str', 'payment_mode']], use_container_width=True, hide_index=True)
+        
+        # 🌟 FIXED: Safety check to inject the missing column if old rows don't have it yet 🌟
+        if 'payment_mode' not in df_sales.columns:
+            df_sales['payment_mode'] = "Cash / UPI"
+            
+        # Ensure fallback column matching to prevent Pandas KeyError crashes
+        cols_to_show = ['id', 'customer', 'total', 'date_str', 'payment_mode']
+        available_cols = [c for c in cols_to_show if c in df_sales.columns]
+        
+        st.dataframe(df_sales[available_cols], use_container_width=True, hide_index=True)
         st.download_button(lang["dl_csv"], data=df_sales.to_csv(index=False).encode('utf-8'), file_name='sales_report.csv', type="primary")
-
     with tab3:
         st.subheader("📋 Active Store Credit & Ledger Balance Files")
         res_cust = db.table("customers").select("*").order("name").execute()
