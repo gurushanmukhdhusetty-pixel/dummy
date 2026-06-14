@@ -391,18 +391,20 @@ def pos():
     with col1:
         chosen_cat = st.radio("Quick Filters By Department Tag", ["All", "Drinks", "Snacks", "Dairy", "General"], index=0, horizontal=True)
         
-        # 🌟 INSTANT SEARCH AS YOU TYPE FIELD TRIGGERED ON EVERY SINGLE CHAR INPUT 🌟
-        search = st.text_input(lang["search"], value="", autocomplete="off")
+ # 🌟 FIXED: Added isolated key token to force real-time keystroke evaluation 🌟
+        search = st.text_input(lang["search"], value="", key="pos_live_search", autocomplete="off")
         
         display_df = df_inv
         if chosen_cat != "All":
             display_df = display_df[display_df['category'] == chosen_cat]
             
-        if search:
+        if search.strip():
+            # Force string alignment to prevent matching omissions
+            search_query = search.strip().lower()
             display_df = display_df[
-                display_df['name'].str.contains(search, case=False) | 
-                display_df['sku'].str.contains(search, case=False) |
-                display_df['id'].str.contains(search, case=False)
+                display_df['name'].str.lower().str.contains(search_query, na=False) | 
+                display_df['sku'].astype(str).str.contains(search_query, na=False) |
+                display_df['id'].str.lower().str.contains(search_query, na=False)
             ]
 
         cols = st.columns(3)
