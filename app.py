@@ -389,12 +389,11 @@ def pos():
 
     col1, col2 = st.columns([2.0, 1.2])
     with col1:
-        # 🌟 NEW: QUICK-TABS (HORIZONTAL CATEGORY SELECTION PILLS) 🌟
-        chosen_cat = st.pills("Quick Filters By Department Tag", ["All", "Drinks", "Snacks", "Dairy", "General"], index=0)
+        # 🌟 BACKWARDS COMPATIBLE FIX: SWAPPED ST.PILLS FOR HORIZONTAL RADIO TABS 🌟
+        chosen_cat = st.radio("Quick Filters By Department Tag", ["All", "Drinks", "Snacks", "Dairy", "General"], index=0, horizontal=True)
         
         search = st.text_input(lang["search"], value="", autocomplete="off")
         
-        # Apply cascade filters sequentially
         display_df = df_inv
         if chosen_cat != "All":
             display_df = display_df[display_df['category'] == chosen_cat]
@@ -453,13 +452,11 @@ def pos():
                 st.caption(f"{lang['sub']}: ₹{subtotal:,.2f} | {lang['tax']}: +₹{tax_amt:,.2f} | {lang['disc']}: -₹{disc_amt:,.2f}")
                 st.markdown(f"### {lang['tot']}: ₹{total:,.2f}")
                 
-                # 🌟 NEW: KHATA CREDIT AND CUSTOMER RETRIEVAL LOGIC 🌟
                 st.markdown("##### 👥 Customer Transaction Routing")
                 customer_input = st.text_input(lang["cust"], value="Walk-in").strip()
                 
                 payment_mode = st.radio("Settle Payment Mode", ["Cash / UPI", "Khata Store Credit"], horizontal=True)
                 
-                # Dynamic validation check if credit routing is requested
                 customer_profile = None
                 if customer_input != "Walk-in" and customer_input:
                     res_cust = db.table("customers").select("*").eq("phone", customer_input).execute()
@@ -485,17 +482,14 @@ def pos():
                 if st.button(lang["checkout"], type="primary", use_container_width=True):
                     s_id = str(uuid.uuid4())[:8].upper()
                     
-                    # Prevent execution anomalies if customer profile is missing for store credit routing balances
                     if payment_mode == "Khata Store Credit" and not customer_profile:
                         st.error("🛑 Request Refused: An active valid Customer Profile record is mandatory for credit bookkeeping ledger inputs.")
                         return
                     
-                    # Reduce item counts from main cloud inventory indices
                     for c_item in st.session_state.cart:
                         current_stock = df_inv[df_inv['id'] == c_item['id']]['quantity'].values[0]
                         db.table("inventory").update({"quantity": int(current_stock - c_item['quantity'])}).eq("id", c_item['id']).execute()
                     
-                    # Update customer balance parameter if credit billing mode is called
                     if payment_mode == "Khata Store Credit" and customer_profile:
                         new_bal = float(customer_profile['khata_balance']) + total
                         db.table("customers").update({"khata_balance": new_bal}).eq("phone", customer_input).execute()
@@ -578,7 +572,6 @@ def analytics():
     df_sales = fetch_sales_count()
     df_inv = fetch_inventory()
     
-    # 🌟 EDITED: WEATHER PREDICTIVE METRICS CONFIGURED AS INTERFACE SUB-TAB 1 (PRIMARY VIEW) 🌟
     tab1, tab2, tab3 = st.tabs(["🤖 Predictive Demand Forecasting", "💰 Store Performance Audits", "📓 Customer Ledger (Khata Credit Tracker)"])
     
     with tab1:
