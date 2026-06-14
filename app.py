@@ -1,3 +1,5 @@
+import logging
+import requests
 import streamlit as st
 import pandas as pd
 import uuid
@@ -6,7 +8,6 @@ from datetime import datetime
 import streamlit.components.v1 as components
 from PIL import Image
 import io
-import requests
 
 # --- COMPULSORY LIBRARIES VALIDATION ---
 try:
@@ -17,8 +18,52 @@ except ImportError:
 
 st.set_page_config(page_title="Titan Inventory & POS System", page_icon="🛒", layout="wide", initial_sidebar_state="expanded")
 
+# --- CONFIGURE LOGGING METRICS ---
+logging.basicConfig(level=logging.INFO)
+
 # -----------------------------
-# 1. STRICT SUPABASE ENVIRONMENT CONNECTION
+# 1. FIXED FAST2SMS WORKFLOW LOGIC
+# -----------------------------
+FAST2SMS_API_KEY = "UxoZARPvI9wTO2HksEmYLSp5KcthfzbXCQ10gdirnqNeVjlF7Jy2utkdHZ8hMVswOliInc59mYFBDUGT"
+FAST2SMS_URL = "https://www.fast2sms.com/dev/bulkV2"
+
+def trigger_sms_bill_delivery(phone_number, total_amount, business_name="Titan Store"):
+    """
+    Dispatches a real-time transactional text using Fast2SMS Quick Route ('q').
+    Bypasses mandatory local telecom domestic DLT registrations via international loop.
+    """
+    # Clean up phone numbers to ensure they are 10-digit integers
+    clean_phone = "".join(filter(str.isdigit, str(phone_number)))
+    if len(clean_phone) != 10:
+        logging.warning(f"Aborting SMS: Invalid phone string footprint parsed: {phone_number}")
+        return False, "Invalid Phone String Length"
+
+    message_text = f"Total Due: Rs {total_amount:,.2f}. Thanks for shopping at {business_name}!"
+    
+    payload = {
+        "authorization": FAST2SMS_API_KEY,
+        "route": "q",
+        "message": message_text,
+        "numbers": clean_phone
+    }
+    
+    try:
+        logging.info(f"Pinging Fast2SMS cloud gateway for phone: {clean_phone}...")
+        response = requests.get(FAST2SMS_URL, params=payload, timeout=8)
+        res_json = response.json()
+        
+        if res_json.get("return") is True:
+            logging.info(f"Transactional notification dispatched. Req ID: {res_json.get('request_id')}")
+            return True, res_json
+        else:
+            logging.error(f"Gateway execution error rejected: {res_json.get('message')}")
+            return False, res_json.get("message")
+    except Exception as e:
+        logging.error(f"Failed to cleanly communicate with message gateway servers: {e}")
+        return False, str(e)
+
+# -----------------------------
+# 2. STRICT SUPABASE ENVIRONMENT CONNECTION
 # -----------------------------
 try:
     from supabase import create_client
@@ -32,7 +77,7 @@ except Exception as e:
     CONNECTION_ERROR = str(e)
 
 # -----------------------------
-# 2. TRANSLATION INTERFACE MAP
+# 3. TRANSLATION INTERFACE MAP
 # -----------------------------
 T = {
     "English": {
@@ -77,7 +122,7 @@ T = {
 }
 
 # -----------------------------
-# 3. RUNTIME INITIALIZATION
+# 4. RUNTIME INITIALIZATION
 # -----------------------------
 if "logged_in" not in st.session_state: st.session_state["logged_in"] = False
 if "current_user" not in st.session_state: st.session_state["current_user"] = None
@@ -251,7 +296,7 @@ def render_weather_predictive_alerts(df_inv):
         st.caption(f"Predictive Pipeline Telemetry Bypass: {e}")
 
 # -----------------------------
-# 4. INVOICE GENERATOR
+# 5. INVOICE GENERATOR
 # -----------------------------
 def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, total, pay_mode="Cash"):
     if not PDF_READY: return None
@@ -281,11 +326,10 @@ def generate_pdf(sale_id, date_str, customer, cart, subtotal, discount, tax, tot
     pdf.line(130, pdf.get_y(), 200, pdf.get_y()); pdf.ln(2); pdf.set_font("Arial", 'B', 14)
     pdf.cell(120, 8, "", 0, 0); pdf.cell(35, 8, "GRAND TOTAL:", 0, 0, 'R'); pdf.cell(35, 8, f"{total:,.2f} ", 0, 1, 'R')
     
-    # 🌟 INDENTATION ALIGNED ACCORDING TO FUNCTION PROTOCOLS 🌟
     return bytes(pdf.output())
 
 # -----------------------------
-# 5. CORE INTERFACE PAGES
+# 6. CORE INTERFACE PAGES
 # -----------------------------
 def dashboard():
     st.title(lang["dash"])
@@ -392,8 +436,6 @@ def pos():
     col1, col2 = st.columns([2.0, 1.2])
     with col1:
         chosen_cat = st.radio("Quick Filters By Department Tag", ["All", "Drinks", "Snacks", "Dairy", "General"], index=0, horizontal=True)
-        
-        # 🌟 FIXED STATE HOOK: REAL-TIME KEYSTROKE EVALUATION ACTIVE 🌟
         search = st.text_input(lang["search"], value="", key="pos_live_search", autocomplete="off")
         
         display_df = df_inv.copy()
@@ -492,6 +534,7 @@ def pos():
                         st.error("🛑 Request Refused: An active valid Customer Profile record is mandatory for credit bookkeeping ledger inputs.")
                         return
                     
+                    # Update stock allocation numbers inside database
                     for c_item in st.session_state.cart:
                         current_stock = df_inv[df_inv['id'] == c_item['id']]['quantity'].values[0]
                         db.table("inventory").update({"quantity": int(current_stock - c_item['quantity'])}).eq("id", c_item['id']).execute()
@@ -503,6 +546,16 @@ def pos():
                     db.table("sales").insert({"id": s_id, "customer": customer_input, "total": total, "date_str": d_str, "payment_mode": payment_mode}).execute()
                     st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": customer_input, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total, "mode": payment_mode}
                     
+                    # 🚀 TRIGGER FAST2SMS AUTOMATED TRANSACTIONAL BILL ROUTING 🚀
+                    if customer_input != "Walk-in" and len(customer_input) == 10 and customer_input.isdigit():
+                        sms_success, sms_log = trigger_sms_bill_delivery(phone_number=customer_input, total_amount=total)
+                        if sms_success:
+                            st.toast(f"💬 Real-time bill sent over SMS to {customer_input}!", icon="✅")
+                        else:
+                            st.toast(f"⚠️ SMS Delivery skipped: {sms_log}", icon="❌")
+                    else:
+                        st.toast("ℹ️ SMS skipped: No valid 10-digit customer number provided.", icon="📝")
+
                     if PDF_READY:
                         st.session_state['pdf'] = generate_pdf(s_id, d_str, customer_input, st.session_state.cart, subtotal, disc_amt, tax_amt, total, payment_mode)
                         st.session_state['pdf_name'] = f"Invoice_{s_id}.pdf"
@@ -571,7 +624,7 @@ def staff():
     if res.data: st.dataframe(pd.DataFrame(res.data), use_container_width=True, hide_index=True)
 
 # -----------------------------
-# 🔮 PREDICTIVE ANALYTICS INTERFACE
+# 7. PREDICTIVE ANALYTICS INTERFACE
 # -----------------------------
 def analytics():
     st.title(lang["analytics"])
@@ -630,7 +683,7 @@ def analytics():
             st.info("No localized store credit accounts registered inside the database framework yet.")
 
 # -----------------------------
-# 6. ENFORCED CLOUD AUTHENTICATION LAYER
+# 8. ENFORCED CLOUD AUTHENTICATION LAYER
 # -----------------------------
 if not DB_CONNECTED:
     st.error("🛑 CRITICAL SERVER ERROR: Application fails to connect to cloud services.")
