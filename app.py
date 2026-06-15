@@ -41,8 +41,8 @@ def trigger_sms_bill_delivery(phone_input, order_id, total_amount):
     # 🔥 REWORKED TEXT: Hidden variable placement with zero automated POS formatting patterns
     # Keeps structural characters down to a minimum to guarantee single unit billing (~125 chars total)
     message_text = (
-        f"Hi, your recent visit code {order_id} for Rs {int(total_amount)} has been logged at Titan Stores. "
-        f"Thank you for stopping by, see you next time!"
+        f"thanks for shopping at Titan Stores. order ID {order_id} for Rs {int(total_amount)} has been logged, for reference"
+        
     )
     
     payload = {
