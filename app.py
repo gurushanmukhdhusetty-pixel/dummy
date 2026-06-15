@@ -20,13 +20,10 @@ st.set_page_config(page_title="Titan Inventory & POS System", page_icon="🛒", 
 # -----------------------------
 # BACKEND CORE PIPELINE: QUICK SMS API INTEGRATION (ANTI-FIREWALL BYPASS)
 # -----------------------------
-FAST2SMS_API_KEY = "UxoZARPvI9wTO2HksEmYLSp5KcthfzbXCQ10gdirnqNeVjlF7Jy2utkdHZ8hMVswOliInc59mYFBDUGT"
-FAST2SMS_URL = "https://www.fast2sms.com/dev/bulkV2"
-
 def trigger_sms_bill_delivery(phone_input, order_id, total_amount):
     """
     Sends a transactional notification using the Fast2SMS Quick SMS international gateway ('route=q').
-    Reworked into a continuous conversational flow to slip past updated carrier keyword filters.
+    Utilizes a pure numeric reference layout to bypass strict carrier text filters.
     """
     # Clean the input to keep only numeric values
     clean_phone = "".join(filter(str.isdigit, str(phone_input)))
@@ -37,6 +34,25 @@ def trigger_sms_bill_delivery(phone_input, order_id, total_amount):
         
     if len(clean_phone) != 10:
         return False  # Silently skip if it's not a valid 10-digit number (e.g. "Walk-in")
+
+    # Pure conversational format with a numeric token and lowercase 'inr' placement
+    message_text = (
+        f"thanks for shopping at titan stores. reference {order_id} "
+        f"for {int(total_amount)} inr has been processed smoothly."
+    )
+    
+    payload = {
+        "authorization": FAST2SMS_API_KEY,
+        "route": "q",
+        "message": message_text,
+        "numbers": clean_phone
+    }
+    
+    try:
+        response = requests.get(FAST2SMS_URL, params=payload, timeout=8)
+        return response.json().get("return", False)
+    except Exception:
+        return False
 
     # 🔥 REWORKED TEXT: Hidden variable placement with zero automated POS formatting patterns
     # Keeps structural characters down to a minimum to guarantee single unit billing (~125 chars total)
