@@ -114,7 +114,7 @@ T = {
         "add": "జోడించు", "cart": "🧾 ప్రస్తుత కార్ట్", "empty": "కార్ట్ ఖాళీగా ఉంది",
         "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం బిల్లు",
         "cust": "కస్టమర్ మొబైల్ నంబర్", "checkout": "💳 చెక్అవుట్ & బిల్లు జనరేషన్", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
-        "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్"
+        "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని...జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్"
     }
 }
 
@@ -519,10 +519,6 @@ def pos():
                                     st.rerun()
                 
                 st.divider()
-                st.markdown("##### 📅 Transaction Date Adjustments")
-                tx_date = st.date_input("Execution Date", datetime.now())
-                tx_time = st.time_input("Execution Time", datetime.now().time())
-                d_str = datetime.combine(tx_date, tx_time).strftime("%Y-%m-%d %H:%M")
                 
                 if st.button(lang["checkout"], type="primary", use_container_width=True):
                     s_id = str(uuid.uuid4())[:8].upper()
@@ -538,6 +534,9 @@ def pos():
                     if payment_mode == "Khata Store Credit" and customer_profile:
                         new_bal = float(customer_profile['khata_balance']) + total
                         db.table("customers").update({"khata_balance": new_bal}).eq("phone", customer_input).execute()
+                    
+                    # Live current timestamp triggered instantly on submission
+                    d_str = datetime.now().strftime("%Y-%m-%d %H:%M")
                     
                     db.table("sales").insert({"id": s_id, "customer": customer_input, "total": total, "date_str": d_str, "payment_mode": payment_mode}).execute()
                     st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": customer_input, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total, "mode": payment_mode}
@@ -679,9 +678,10 @@ if not DB_CONNECTED:
     st.info(f"Diagnostic Error Output: {CONNECTION_ERROR}")
 else:
     if not st.session_state["logged_in"]:
+        # Removed emoji from the container header title text
         st.markdown("""
         <div class="login-container">
-            <div class="login-header">🏬 Titan Inventory & POS System</div>
+            <div class="login-header">Titan Inventory & POS System</div>
             <div class="login-subheader">Authorized Operator Gateway Security Check</div>
         </div>
         """, unsafe_allow_html=True)
