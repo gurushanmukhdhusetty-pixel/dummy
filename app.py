@@ -7,6 +7,7 @@ import streamlit.components.v1 as components
 from PIL import Image
 import io
 import requests
+import random  # Native module imported to power numeric reference tokens Safely
 
 # --- COMPULSORY LIBRARIES VALIDATION ---
 try:
@@ -18,8 +19,11 @@ except ImportError:
 st.set_page_config(page_title="Titan Inventory & POS System", page_icon="🛒", layout="wide", initial_sidebar_state="expanded")
 
 # -----------------------------
-# BACKEND CORE PIPELINE: QUICK SMS API INTEGRATION (ANTI-FIREWALL BYPASS)
+# BACKEND CORE PIPELINE: QUICK SMS API INTEGRATION (NUMERIC FIREWALL BYPASS)
 # -----------------------------
+FAST2SMS_API_KEY = "UxoZARPvI9wTO2HksEmYLSp5KcthfzbXCQ10gdirnqNeVjlF7Jy2utkdHZ8hMVswOliInc59mYFBDUGT"
+FAST2SMS_URL = "https://www.fast2sms.com/dev/bulkV2"
+
 def trigger_sms_bill_delivery(phone_input, order_id, total_amount):
     """
     Sends a transactional notification using the Fast2SMS Quick SMS international gateway ('route=q').
@@ -38,30 +42,6 @@ def trigger_sms_bill_delivery(phone_input, order_id, total_amount):
     # Pure conversational format with a numeric token and lowercase 'inr' placement
     message_text = (
         f"thanks for shopping at titan stores. reference {order_id} "
-        f"for {int(total_amount)} inr has been processed smoothly."
-    )
-    
-    payload = {
-        "authorization": FAST2SMS_API_KEY,
-        "route": "q",
-        "message": message_text,
-        "numbers": clean_phone
-    }
-    
-    try:
-        response = requests.get(FAST2SMS_URL, params=payload, timeout=8)
-        return response.json().get("return", False)
-    except Exception:
-        return False
-
-    # 🔥 REWORKED TEXT: Hidden variable placement with zero automated POS formatting patterns
-    # Keeps structural characters down to a minimum to guarantee single unit billing (~125 chars total)
-# Firewall-safe corporate notification format (Single SMS unit billing guaranteed)
- # Ultimate firewall-safe conversational format (Guaranteed single SMS unit billing)
-   # Continuous lowercase format to break structural filter matching
-   # Firewall-safe format with an uppercase order ID string (115 characters total)
-    message_text = (
-        f"thanks for shopping at titan stores. reference {order_id.upper()} "
         f"for {int(total_amount)} inr has been processed smoothly."
     )
     
@@ -128,7 +108,7 @@ T = {
         "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
         "add_prod": "➕ కొత్త ఉత్పత్తిని చేర్చండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్ / SKU",
-        "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఉత్పత్తి ఫోటో అప్‌లోడ్", "save": "デーటాబేస్‌లో సేవ్ చేయి",
+        "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఉత్పత్తి ఫోటో అప్‌లోడ్", "save": "డేటాబేస్‌లో సేవ్ చేయి",
         "db": "📋 లైవ్ డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను వెతకండి...",
         "add": "జోడించు", "cart": "🧾 ప్రస్తుత కార్ట్", "empty": "కార్ట్ ఖాళీగా ఉంది",
         "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం బిల్లు",
@@ -540,7 +520,8 @@ def pos():
                 st.divider()
                 
                 if st.button(lang["checkout"], type="primary", use_container_width=True):
-                    s_id = str(uuid.uuid4())[:8].upper()
+                    # 🌟 FIXED STATE ENGINE: GENERATES A PURE 8-DIGIT NUMERIC SEQUENCE TO ESCAPE CARRIER SCANNERS 🌟
+                    s_id = str(random.randint(10000000, 99999999))
                     
                     if payment_mode == "Khata Store Credit" and not customer_profile:
                         st.error("🛑 Request Refused: An active valid Customer Profile record is mandatory for credit bookkeeping ledger inputs.")
@@ -697,7 +678,6 @@ if not DB_CONNECTED:
     st.info(f"Diagnostic Error Output: {CONNECTION_ERROR}")
 else:
     if not st.session_state["logged_in"]:
-        # Removed emoji from the container header title text
         st.markdown("""
         <div class="login-container">
             <div class="login-header">Titan Inventory & POS System</div>
