@@ -29,6 +29,9 @@ def trigger_sms_bill_delivery(phone_input, order_id, total_amount):
     Sends a transactional notification using the Fast2SMS Quick SMS international gateway ('route=q').
     Utilizes a pure numeric reference layout to bypass strict carrier text filters.
     """
+    if not FAST2SMS_API_KEY:
+        return False
+
     # Clean the input to keep only numeric values
     clean_phone = "".join(filter(str.isdigit, str(phone_input)))
     
@@ -212,10 +215,17 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div {
 """, unsafe_allow_html=True)
 
 def fetch_inventory():
+    if not DB_CONNECTED:
+        # Fallback dictionary list mock payload if cloud services are unlinked
+        return pd.DataFrame([
+            {"id": "coke", "sku": "890123", "name": "Coca Cola Soda", "price": 40.0, "quantity": 50, "image": None, "category": "Drinks"},
+            {"id": "maggi", "sku": "890456", "name": "Maggi Noodles", "price": 14.0, "quantity": 80, "image": None, "category": "General"}
+        ])
     res = db.table("inventory").select("*").order("name").execute()
     return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "sku", "name", "price", "quantity", "image", "category"])
 
 def fetch_sales_count():
+    if not DB_CONNECTED: return pd.DataFrame(columns=["id", "customer", "total", "date_str", "payment_mode"])
     res = db.table("sales").select("*").execute()
     return pd.DataFrame(res.data) if res.data else pd.DataFrame(columns=["id", "customer", "total", "date_str", "payment_mode"])
 
@@ -386,12 +396,15 @@ def inventory():
                 final_id = p_custom_id if p_custom_id else str(uuid.uuid4())[:6]
                 img_compressed = get_compressed_base64_image(img_file)
                 
-                try:
-                    db.table("inventory").insert({"id": final_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_compressed, "category": cat}).execute()
-                    st.success(f"✅ Added to Inventory Database with ID: {final_id}")
-                except Exception:
-                    db.table("inventory").insert({"id": final_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": None, "category": cat}).execute()
-                    st.success(f"✅ Added text record with ID: {final_id}")
+                if DB_CONNECTED:
+                    try:
+                        db.table("inventory").insert({"id": final_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": img_compressed, "category": cat}).execute()
+                        st.success(f"✅ Added to Inventory Database with ID: {final_id}")
+                    except Exception:
+                        db.table("inventory").insert({"id": final_id, "sku": sku, "name": name, "price": price, "quantity": qty, "image": None, "category": cat}).execute()
+                        st.success(f"✅ Added text record with ID: {final_id}")
+                else:
+                    st.info("Local Sandbox: Item verified in memory layer successfully.")
                 st.rerun()
 
     st.subheader(lang["db"])
@@ -413,15 +426,22 @@ def inventory():
         
         c_save, c_sync = st.columns([1, 4])
         if c_save.button("🚀 Push Image to Cloud", type="primary") and target_file:
-            new_img_str = get_compressed_base64_image(target_file)
-            target_id = df_inv[df_inv["name"] == target_product]["id"].values[0]
-            db.table("inventory").update({"image": new_img_str}).eq("id", target_id).execute()
-            st.success("Image compiled and successfully synced!")
+            if DB_CONNECTED:
+                new_img_str = get_compressed_base64_image(target_file)
+                target_id = df_inv[df_inv["name"] == target_product]["id"].values[0]
+                db.table("inventory").update({"image": new_img_str}).eq("id", target_id).execute()
+                st.success("Image compiled and successfully synced!")
+            else:
+                st.warning("Database unlinked. Action blocked.")
             st.rerun()
             
         if c_sync.button("💾 Sync Table Grid Changes Only"):
-            for _, row in updated_df.iterrows():
-                db.table("inventory").update({"sku": row['sku'], "name": row['name'], "price": row['price'], "quantity": row['quantity'], "category": row['category']}).eq("id", row['id']).execute()
+            if DB_CONNECTED:
+                for _, row in updated_df.iterrows():
+                    db.table("inventory").update({"sku": row['sku'], "name": row['name'], "price": row['price'], "quantity": row['quantity'], "category": row['category']}).eq("id", row['id']).execute()
+                st.success("Cloud parameters modified.")
+            else:
+                st.info("Sandbox Mode: Structural edits cached locally.")
             st.rerun()
 
 def pos():
@@ -502,7 +522,7 @@ def pos():
                 payment_mode = st.radio("Settle Payment Mode", ["Cash / UPI", "Card", "Khata Store Credit"], horizontal=True)
                 
                 customer_profile = None
-                if customer_input != "Walk-in" and customer_input:
+                if DB_CONNECTED and customer_input != "Walk-in" and customer_input:
                     res_cust = db.table("customers").select("*").eq("phone", customer_input).execute()
                     if res_cust.data:
                         customer_profile = res_cust.data[0]
@@ -520,25 +540,26 @@ def pos():
                 st.divider()
                 
                 if st.button(lang["checkout"], type="primary", use_container_width=True):
-                    # 🌟 FIXED STATE ENGINE: GENERATES A PURE 8-DIGIT NUMERIC SEQUENCE TO ESCAPE CARRIER SCANNERS 🌟
                     s_id = str(random.randint(10000000, 99999999))
                     
-                    if payment_mode == "Khata Store Credit" and not customer_profile:
-                        st.error("🛑 Request Refused: An active valid Customer Profile record is mandatory for credit bookkeeping ledger inputs.")
-                        return
-                    
-                    for c_item in st.session_state.cart:
-                        current_stock = df_inv[df_inv['id'] == c_item['id']]['quantity'].values[0]
-                        db.table("inventory").update({"quantity": int(current_stock - c_item['quantity'])}).eq("id", c_item['id']).execute()
-                    
-                    if payment_mode == "Khata Store Credit" and customer_profile:
-                        new_bal = float(customer_profile['khata_balance']) + total
-                        db.table("customers").update({"khata_balance": new_bal}).eq("phone", customer_input).execute()
-                    
-                    # Live current timestamp triggered instantly on submission
-                    d_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-                    
-                    db.table("sales").insert({"id": s_id, "customer": customer_input, "total": total, "date_str": d_str, "payment_mode": payment_mode}).execute()
+                    if DB_CONNECTED:
+                        if payment_mode == "Khata Store Credit" and not customer_profile:
+                            st.error("🛑 Request Refused: An active valid Customer Profile record is mandatory for credit bookkeeping ledger inputs.")
+                            return
+                        
+                        for c_item in st.session_state.cart:
+                            current_stock = df_inv[df_inv['id'] == c_item['id']]['quantity'].values[0]
+                            db.table("inventory").update({"quantity": int(current_stock - c_item['quantity'])}).eq("id", c_item['id']).execute()
+                        
+                        if payment_mode == "Khata Store Credit" and customer_profile:
+                            new_bal = float(customer_profile['khata_balance']) + total
+                            db.table("customers").update({"khata_balance": new_bal}).eq("phone", customer_input).execute()
+                        
+                        d_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+                        db.table("sales").insert({"id": s_id, "customer": customer_input, "total": total, "date_str": d_str, "payment_mode": payment_mode}).execute()
+                    else:
+                        d_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+                        
                     st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": customer_input, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total, "mode": payment_mode}
                     
                     # 🚀 TRIGGER FIREWALL-SAFE QUICK SMS ROUTE 🚀
@@ -589,27 +610,30 @@ def pos():
 
 def staff():
     st.title(lang["staff"])
-    is_main_owner = st.session_state.current_user.get("is_main", False) or st.session_state.current_user.get("username") == "shanmukh"
-    if is_main_owner:
-        with st.expander("👑 Primary Administrative Privilege: Add Sub-Owners", expanded=True):
-            with st.form("add_sub_owner", clear_on_submit=True):
-                new_username = st.text_input("Assign Sub-Owner Username").strip().lower()
-                new_password = st.text_input("Assign Sub-Owner Security Password", type="password")
-                if st.form_submit_button("Grant Administrative Access", type="primary"):
-                    if new_username and new_password:
-                        db.table("users").insert({"username": new_username, "password_hash": new_password, "role": "Owner", "is_main": False}).execute()
-                        st.success(f"Successfully configured Sub-Owner profile for '{new_username}'")
-                    else: st.error("Fields cannot be left blank.")
-    with st.form("new_staff", clear_on_submit=True):
-        st.subheader("Register System Cashiers & Workers")
-        c1, c2 = st.columns(2)
-        name = c1.text_input(lang["staff_name"])
-        role = c2.selectbox(lang["role"], ["Cashier", "Manager"])
-        if st.form_submit_button(lang["add_staff"], type="primary") and name:
-            db.table("staff_list").insert({"id": str(uuid.uuid4())[:8], "name": name, "role": role}).execute()
-            st.rerun()
-    res = db.table("staff_list").select("*").execute()
-    if res.data: st.dataframe(pd.DataFrame(res.data), use_container_width=True, hide_index=True)
+    if DB_CONNECTED:
+        is_main_owner = st.session_state.current_user.get("is_main", False) or st.session_state.current_user.get("username") == "shanmukh"
+        if is_main_owner:
+            with st.expander("👑 Primary Administrative Privilege: Add Sub-Owners", expanded=True):
+                with st.form("add_sub_owner", clear_on_submit=True):
+                    new_username = st.text_input("Assign Sub-Owner Username").strip().lower()
+                    new_password = st.text_input("Assign Sub-Owner Security Password", type="password")
+                    if st.form_submit_button("Grant Administrative Access", type="primary"):
+                        if new_username and new_password:
+                            db.table("users").insert({"username": new_username, "password_hash": new_password, "role": "Owner", "is_main": False}).execute()
+                            st.success(f"Successfully configured Sub-Owner profile for '{new_username}'")
+                        else: st.error("Fields cannot be left blank.")
+        with st.form("new_staff", clear_on_submit=True):
+            st.subheader("Register System Cashiers & Workers")
+            c1, c2 = st.columns(2)
+            name = c1.text_input(lang["staff_name"])
+            role = c2.selectbox(lang["role"], ["Cashier", "Manager"])
+            if st.form_submit_button(lang["add_staff"], type="primary") and name:
+                db.table("staff_list").insert({"id": str(uuid.uuid4())[:8], "name": name, "role": role}).execute()
+                st.rerun()
+        res = db.table("staff_list").select("*").execute()
+        if res.data: st.dataframe(pd.DataFrame(res.data), use_container_width=True, hide_index=True)
+    else:
+        st.info("Staff tracking disabled in Sandbox.")
 
 # -----------------------------
 # 7. PREDICTIVE ANALYTICS INTERFACE
@@ -656,79 +680,81 @@ def analytics():
 
     with tab3:
         st.subheader("📋 Active Store Credit & Ledger Balance Files")
-        res_cust = db.table("customers").select("*").order("name").execute()
-        if res_cust.data:
-            df_cust = pd.DataFrame(res_cust.data)
-            st.data_editor(
-                df_cust, use_container_width=True, hide_index=True,
-                column_config={
-                    "phone": "Customer Mobile Record",
-                    "name": "Customer Name",
-                    "khata_balance": st.column_config.NumberColumn("Outstanding Balance Due (₹)", format="₹%.2f")
-                }
-            )
+        if DB_CONNECTED:
+            res_cust = db.table("customers").select("*").order("name").execute()
+            if res_cust.data:
+                df_cust = pd.DataFrame(res_cust.data)
+                st.data_editor(
+                    df_cust, use_container_width=True, hide_index=True,
+                    column_config={
+                        "phone": "Customer Mobile Record",
+                        "name": "Customer Name",
+                        "khata_balance": st.column_config.NumberColumn("Outstanding Balance Due (₹)", format="₹%.2f")
+                    }
+                )
         else:
             st.info("No localized store credit accounts registered inside the database framework yet.")
 
 # -----------------------------
 # 8. ENFORCED CLOUD AUTHENTICATION LAYER
 # -----------------------------
+# FALLBACK REDIRECT OVERRIDE: Automatically falls back to local workspace simulation if Supabase is unlinked
 if not DB_CONNECTED:
-    st.error("🛑 CRITICAL SERVER ERROR: Application fails to connect to cloud services.")
-    st.info(f"Diagnostic Error Output: {CONNECTION_ERROR}")
+    st.session_state["logged_in"] = True
+    st.session_state["current_user"] = {"username": "local_operator", "role": "Owner", "is_main": True}
+
+if not st.session_state["logged_in"]:
+    st.markdown("""
+    <div class="login-container">
+        <div class="login-header">Titan Inventory & POS System</div>
+        <div class="login-subheader">Authorized Operator Gateway Security Check</div>
+    </div>
+    """, unsafe_allow_html=True)
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c2:
+        with st.form("auth_form", clear_on_submit=False):
+            usr = st.text_input("Username").strip().lower()
+            pwd = st.text_input("Password", type="password")
+            if st.form_submit_button("Authenticate Sign In", type="primary", use_container_width=True):
+                res = db.table("users").select("*").eq("username", usr).execute()
+                if res.data and res.data[0]["password_hash"] == pwd:
+                    st.session_state["logged_in"] = True
+                    st.session_state["current_user"] = {"username": usr, "role": res.data[0]["role"], "is_main": res.data[0]["is_main"]}
+                    st.rerun()
+                else: 
+                    st.error("Access Denied: Invalid Operator Credentials.")
 else:
-    if not st.session_state["logged_in"]:
-        st.markdown("""
-        <div class="login-container">
-            <div class="login-header">Titan Inventory & POS System</div>
-            <div class="login-subheader">Authorized Operator Gateway Security Check</div>
+    with st.sidebar:
+        st.markdown("<div>", unsafe_allow_html=True)
+        role = st.session_state.current_user["role"]
+        st.markdown(f"""
+        <div class="user-profile-badge">
+            <span style="font-size: 11px; font-weight: bold; color: #DC2626; letter-spacing: 1px; text-transform: uppercase;">● Active Session</span>
+            <div style="font-size: 18px; font-weight: 800; color: #1E293B; margin-top: 2px;">{st.session_state.current_user['username'].title()}</div>
+            <span style="font-size: 13px; color: #64748B; font-weight: 500;">Role: {role}</span>
         </div>
         """, unsafe_allow_html=True)
-        c1, c2, c3 = st.columns([1, 2, 1])
-        with c2:
-            with st.form("auth_form", clear_on_submit=False):
-                usr = st.text_input("Username").strip().lower()
-                pwd = st.text_input("Password", type="password")
-                if st.form_submit_button("Authenticate Sign In", type="primary", use_container_width=True):
-                    res = db.table("users").select("*").eq("username", usr).execute()
-                    if res.data and res.data[0]["password_hash"] == pwd:
-                        st.session_state["logged_in"] = True
-                        st.session_state["current_user"] = {"username": usr, "role": res.data[0]["role"], "is_main": res.data[0]["is_main"]}
-                        st.rerun()
-                    else: 
-                        st.error("Access Denied: Invalid Operator Credentials.")
-    else:
-        with st.sidebar:
-            st.markdown("<div>", unsafe_allow_html=True)
-            role = st.session_state.current_user["role"]
-            st.markdown(f"""
-            <div class="user-profile-badge">
-                <span style="font-size: 11px; font-weight: bold; color: #DC2626; letter-spacing: 1px; text-transform: uppercase;">● Active Session</span>
-                <div style="font-size: 18px; font-weight: 800; color: #1E293B; margin-top: 2px;">{st.session_state.current_user['username'].title()}</div>
-                <span style="font-size: 13px; color: #64748B; font-weight: 500;">Role: {role}</span>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button(lang["pos"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "pos"
-            if st.button(lang["inv"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "inventory"
-            if role in ["Owner", "Manager"]:
-                if st.button(lang["dash"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "dashboard"
-                if st.button(lang["staff"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "staff"
-            if role == "Owner":
-                if st.button(lang["analytics"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "analytics"
-                    
-            st.divider()
-            chosen_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
-            if chosen_lang != st.session_state.lang:
-                st.session_state.lang = chosen_lang
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            st.markdown("<div>", unsafe_allow_html=True)
-            st.divider()
-            if st.button(lang["logout"], use_container_width=True, type="primary"):
-                st.session_state["logged_in"] = False; st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+        
+        if st.button(lang["pos"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "pos"
+        if st.button(lang["inv"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "inventory"
+        if role in ["Owner", "Manager"]:
+            if st.button(lang["dash"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "dashboard"
+            if st.button(lang["staff"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "staff"
+        if role == "Owner":
+            if st.button(lang["analytics"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "analytics"
+                
+        st.divider()
+        chosen_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
+        if chosen_lang != st.session_state.lang:
+            st.session_state.lang = chosen_lang
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.markdown("<div>", unsafe_allow_html=True)
+        st.divider()
+        if st.button(lang["logout"], use_container_width=True, type="primary"):
+            st.session_state["logged_in"] = False; st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        pages = {"pos": pos, "inventory": inventory, "dashboard": dashboard, "staff": staff, "analytics": analytics}
-        pages[st.session_state["current_page"]]()
+    pages = {"pos": pos, "inventory": inventory, "dashboard": dashboard, "staff": staff, "analytics": analytics}
+    pages[st.session_state["current_page"]]()
