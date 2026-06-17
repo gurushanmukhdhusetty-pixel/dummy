@@ -8,7 +8,7 @@ from PIL import Image
 import io
 import requests
 import random
-import time  # Standard dependency to enforce network buffers on checkouts
+import time  # Allowed timeline buffers for cellular processing networks
 
 # --- COMPULSORY LIBRARIES VALIDATION ---
 try:
@@ -20,27 +20,27 @@ except ImportError:
 st.set_page_config(page_title="Titan Inventory & POS System", page_icon="🛒", layout="wide", initial_sidebar_state="expanded")
 
 # -----------------------------
-# BACKEND CORE PIPELINE: QUICK SMS API INTEGRATION (FIREWALL BYPASS)
+# BACKEND CORE PIPELINE: QUICK SMS API INTEGRATION
 # -----------------------------
 FAST2SMS_API_KEY = "UxoZARPvI9wTO2HksEmYLSp5KcthfzbXCQ10gdirnqNeVjlF7Jy2utkdHZ8hMVswOliInc59mYFBDUGT"
 FAST2SMS_URL = "https://www.fast2sms.com/dev/bulkV2"
 
 def trigger_sms_bill_delivery(phone_input, order_id, total_amount):
     if not FAST2SMS_API_KEY:
-        st.error("SMS API Key not located in runtime context.")
+        st.error("SMS API Key not found.")
         return False
 
-    # Clean non-digit variables out of the user input completely
+    # Extract clean digits from the string
     clean_phone = "".join(filter(str.isdigit, str(phone_input)))
     
     if len(clean_phone) == 12 and clean_phone.startswith("91"):
         clean_phone = clean_phone[2:]
         
     if len(clean_phone) != 10:
-        st.warning(f"⚠️ Invalid phone number syntax: '{phone_input}'. Enforce 10 digits (Skipping 'Walk-in').")
+        st.warning(f"⚠️ Invalid phone number layout: '{phone_input}'. Entry must be exactly 10 digits ('Walk-in' transactions are skipped).")
         return False
 
-    # Conversational blueprint configuration to slide safely past updated carrier firewalls
+    # Stealth conversational format to drop tracking indicators on carrier networks
     message_text = (
         f"visit summary for titan update. ref {order_id} "
         f"value {int(total_amount)} inr closed successfully."
@@ -54,17 +54,17 @@ def trigger_sms_bill_delivery(phone_input, order_id, total_amount):
     }
     
     try:
-        with st.spinner("Dispatching tracking parameters to telecom gateway..."):
+        with st.spinner("Contacting external telecom routing nodes..."):
             response = requests.get(FAST2SMS_URL, params=payload, timeout=10)
             res_json = response.json()
             if res_json.get("return", False):
-                st.success(f"📱 Notification cleared successfully! Reference No: {order_id}")
+                st.success(f"📱 Message successfully dispatched through gateway. Request ID: {res_json.get('request_id')}")
                 return True
             else:
-                st.error(f"❌ Gateway Rejection: {res_json.get('message')}")
+                st.error(f"❌ Gateway Rejection Error: {res_json.get('message')}")
                 return False
     except Exception as e:
-        st.error(f"🌐 Infrastructure Network Exception: {str(e)}")
+        st.error(f"🌐 Network connection infrastructure failure: {str(e)}")
         return False
 
 # -----------------------------
@@ -82,7 +82,7 @@ except Exception as e:
     CONNECTION_ERROR = str(e)
 
 # -----------------------------
-# 2. TRANSLATION INTERFACE MAP (UNIFORM ENGLISH TRANSLATION)
+# 2. TRANSLATION INTERFACE MAP
 # -----------------------------
 T = {
     "English": {
@@ -97,6 +97,32 @@ T = {
         "sub": "Subtotal", "disc": "Discount", "tax": "Tax", "tot": "Total",
         "cust": "Customer Mobile (10-Digit)", "checkout": "💳 Checkout & Generate Bill", "dl_pdf": "📄 Download PDF Bill",
         "staff_name": "Full Name", "role": "Role", "add_staff": "Add Staff Member", "dl_csv": "📥 Export CSV"
+    },
+    "Hindi": {
+        "dash": "📊 डैशबोर्ड मेट्रिक्स", "inv": "📦 इन्वेंटरी प्रबंधन", "pos": "🛒 बिक्री केंद्र (POS)", 
+        "staff": "👥 स्टाफ और उपयोगकर्ता प्रबंधन", "analytics": "🔮 भविष्य कहनेवाला विश्लेषण", "logout": "लॉग आउट",
+        "login_btn": "लॉग इन करें", "user": "उपयोगकर्ता नाम", "pass": "पासवर्ड",
+        "tot_prod": "अद्वितीय उत्पाद", "stock": "स्टॉक में कुल इकाइयाँ", "rev": "कुल सकल राजस्व",
+        "add_prod": "➕ नया उत्पाद पंजीकृत करें", "p_name": "उत्पाद का नाम", "sku": "बारकोड / SKU",
+        "price": "कीमत (₹)", "qty": "मात्रा", "upload": "📷 उत्पाद फोटो अपलोड करें", "save": "डेटाबेस में सहेजें",
+        "db": "📋 लाइव डेटाबेस (सीधे संशोधित करें या नीचे चित्र बदलें)", "search": "🔍 उत्पाद खोजें...",
+        "add": "जोड़ें", "cart": "🧾 वर्तमान कार्ट", "empty": "कार्ट खाली है",
+        "sub": "उप-योग", "disc": "छूट", "tax": "कर", "tot": "कुल योग",
+        "cust": "ग्राहक मोबाइल नंबर", "checkout": "💳 चेकआउट और बिल बनाएं", "dl_pdf": "📄 PDF बिल डाउनलोड करें",
+        "staff_name": "पूरा नाम", "role": "भूमिका", "add_staff": "स्टाफ सदस्य जोड़ें", "dl_csv": "📥 CSV निर्यात करें"
+    },
+    "Telugu": {
+        "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంతరీ మేనేజెమెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
+        "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "🔮 ప్రిడిక్టివ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
+        "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
+        "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
+        "add_prod": "➕ కొత్త ఉత్పత్తిని చేర్చండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్ / SKU",
+        "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఉత్పత్తి ఫోటో అప్‌లోడ్", "save": "డేటాబేస్‌లో సేవ్ చేయి",
+        "db": "📋 లైవ్ డేటాబేస్ (సవరించడానికి డబుల్ క్లిక్ చేయండి)", "search": "🔍 ఉత్పత్తులను వెతకండి...",
+        "add": "జోడించు", "cart": "🧾 ప్రస్తుత కార్ట్", "empty": "కార్ట్ ఖాళీగా ఉంది",
+        "sub": "ఉపమొత్తం", "disc": "డిస్కౌంట్", "tax": "పన్ను", "tot": "మొత్తం బిల్లు",
+        "cust": "కస్టమర్ మొబైల్ నంబర్", "checkout": "💳 చెక్అవుట్ & బిల్లు జనరేషన్", "dl_pdf": "📄 PDF బిల్లు డౌన్‌లోడ్",
+        "staff_name": "పూర్తి పేరు", "role": "పాత్ర", "add_staff": "సిబ్బందిని...జోడించండి", "dl_csv": "📥 CSV డౌన్‌లోడ్"
     }
 }
 
@@ -111,7 +137,7 @@ if "cart" not in st.session_state: st.session_state["cart"] = []
 if "last_receipt" not in st.session_state: st.session_state["last_receipt"] = None
 if "current_page" not in st.session_state: st.session_state["current_page"] = "pos"
 
-lang = T["English"]
+lang = T[st.session_state["lang"]]
 
 st.markdown("""
 <style>
@@ -121,6 +147,7 @@ h1, h2, h3, .stApp h1, .stApp h2, .stApp h3, [data-testid="stMetricLabel"] { col
 button[kind="primary"] { background-color: #DC2626 !important; color: #FFFFFF !important; border: none !important; font-weight: bold !important; padding: 12px 24px !important; }
 button[kind="primary"]:hover { background-color: #991B1B !important; }
 button[kind="secondary"] { background-color: #FFFFFF !important; color: #4338CA !important; border: 1px solid #C7D2FE !important; }
+.login-container { background: #FFFFFF !important; padding: 35px 25px !important; border-radius: 16px !important; border-top: 6px solid #DC2626 !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important; width: 100% !important; max-width: 420px !important; margin: 40px auto !important; text-align: center; }
 div[data-baseweb="input"] input, .stNumberInput input, .stTextInput input { background-color: #FFFFFF !important; color: #1E293B !important; border: 1px solid #CBD5E1 !important; padding: 10px 14px !important; font-size: 16px !important; }
 [data-testid="metric-container"] { background: #FFFFFF !important; border: 1px solid #E2E8F0 !important; padding: 20px !important; border-radius: 12px !important; border-top: 4px solid #DC2626 !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important; }
 .user-profile-badge { background-color: #FFFFFF !important; border-left: 4px solid #DC2626 !important; padding: 12px 16px !important; border-radius: 8px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important; margin-bottom: 15px !important; }
@@ -159,14 +186,18 @@ def render_weather_predictive_alerts(df_inv):
     try:
         api_key = st.secrets["OPENWEATHER_API_KEY"]
     except Exception:
+        st.warning("⚠️ OpenWeather API Key missing from configuration files.")
         return
+
     url = f"https://api.openweathermap.org/data/2.5/forecast?q=Hyderabad,IN&appid={api_key}&units=metric"
     try:
         response = requests.get(url, timeout=4).json()
         forecast_list = response.get("list", [])
-        if response.get("cod") != "200" or not forecast_list: return
+        if response.get("cod") != "200" or not forecast_list:
+            return
         max_temp = max([item["main"]["temp_max"] for item in forecast_list[:16]])
         has_rain = any(["rain" in item.get("weather", [{}])[0].get("main", "").lower() for item in forecast_list[:16]])
+        
         c_w1, c_w2 = st.columns(2)
         c_w1.metric("Calculated 48H Peak Temp", f"{max_temp:.1f}°C")
         c_w2.metric("Precipitation Inbound", "Yes" if has_rain else "No")
@@ -189,6 +220,7 @@ def dashboard():
     df_sales = fetch_sales_count()
     tot_sku = len(df_inv)
     tot_rev = df_sales["total"].astype(float).sum() if not df_sales.empty else 0.0
+    
     c1, c2 = st.columns(2)
     c1.metric(lang["rev"], f"₹{tot_rev:,.2f}")
     c2.metric(lang["tot_prod"], f"{tot_sku} Items")
@@ -202,7 +234,7 @@ def inventory():
 def pos():
     st.title(lang["pos"])
     df_inv = fetch_inventory()
-    if df_inv.empty: st.warning("Inventory clear."); return
+    if df_inv.empty: st.warning("Inventory empty."); return
 
     col1, col2 = st.columns([2.0, 1.2])
     with col1:
@@ -259,18 +291,23 @@ def pos():
                     st.session_state.last_receipt = {"id": s_id, "date": d_str, "cust": customer_input, "items": list(st.session_state.cart), "sub": subtotal, "disc": disc_amt, "tax": tax_amt, "tot": total, "mode": payment_mode}
                     
                     # 🚀 TRIGGER FIREWALL-SAFE QUICK SMS ROUTE
-                    trigger_sms_bill_delivery(phone_input=customer_input, order_id=s_id, total_amount=total)
+                    sms_status = trigger_sms_bill_delivery(phone_input=customer_input, order_id=s_id, total_amount=total)
                     
                     if PDF_READY:
                         st.session_state['pdf'] = generate_pdf(s_id, d_str, customer_input, st.session_state.cart, subtotal, disc_amt, tax_amt, total, payment_mode)
                         st.session_state['pdf_name'] = f"Invoice_{s_id}.pdf"
                     
                     st.session_state.cart.clear()
-                    time.sleep(2)  # Maintain runtime overhead before browser cache reload
+                    
+                    # Thread buffer allows async network completion hooks before page clear refreshes execution
+                    time.sleep(2)
                     st.rerun()
 
-def staff(): st.title(lang["staff"])
-def analytics(): st.title(lang["analytics"])
+def staff():
+    st.title(lang["staff"])
+
+def analytics():
+    st.title(lang["analytics"])
 
 # -----------------------------
 # 8. ENFORCED CLOUD AUTHENTICATION LAYER
@@ -280,13 +317,17 @@ if not DB_CONNECTED:
     st.session_state["current_user"] = {"username": "local_operator", "role": "Owner", "is_main": True}
 
 if not st.session_state["logged_in"]:
-    st.info("Awaiting System Credentials Authentication...")
+    st.info("Please Login")
 else:
     with st.sidebar:
         role = st.session_state.current_user["role"]
         if st.button(lang["pos"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "pos"
         if st.button(lang["inv"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "inventory"
         if st.button(lang["dash"], use_container_width=True, type="secondary"): st.session_state["current_page"] = "dashboard"
+        chosen_lang = st.selectbox("🌐 Language", ["English", "Hindi", "Telugu"], index=["English", "Hindi", "Telugu"].index(st.session_state.lang))
+        if chosen_lang != st.session_state.lang:
+            st.session_state.lang = chosen_lang
+            st.rerun()
 
     pages = {"pos": pos, "inventory": inventory, "dashboard": dashboard, "staff": staff, "analytics": analytics}
     pages[st.session_state["current_page"]]()
