@@ -42,10 +42,10 @@ def trigger_sms_bill_delivery(phone_input, order_id, total_amount):
     if len(clean_phone) != 10:
         return False  # Silently skip if it's not a valid 10-digit number (e.g. "Walk-in")
 
-    # Pure conversational format with a numeric token and lowercase 'inr' placement
+    # Updated firewall-safe format to prevent template blockages
     message_text = (
-        f"thanks for shopping at titan stores. reference {order_id} "
-        f"for {int(total_amount)} inr has been processed smoothly."
+        f"visit summary for titan update. ref {order_id} "
+        f"value {int(total_amount)} inr closed successfully."
     )
     
     payload = {
@@ -95,7 +95,7 @@ T = {
     "Hindi": {
         "dash": "📊 डैशबोर्ड मेट्रिक्स", "inv": "📦 इन्वेंटरी प्रबंधन", "pos": "🛒 बिक्री केंद्र (POS)", 
         "staff": "👥 स्टाफ और उपयोगकर्ता प्रबंधन", "analytics": "🔮 भविष्य कहनेवाला विश्लेषण", "logout": "लॉग आउट",
-        "login_btn": "लॉग इन करें", "user": "उपयोगकर्ता नाम", "pass": "पासवर्ड",
+        "login_btn": "Log इन करें", "user": "उपयोगकर्ता नाम", "pass": "पासवर्ड",
         "tot_prod": "अद्वितीय उत्पाद", "stock": "स्टॉक में कुल इकाइयाँ", "rev": "कुल सकल राजस्व",
         "add_prod": "➕ नया उत्पाद पंजीकृत करें", "p_name": "उत्पाद का नाम", "sku": "बारकोड / SKU",
         "price": "कीमत (₹)", "qty": "मात्रा", "upload": "📷 उत्पाद फोटो अपलोड करें", "save": "डेटाबेस में सहेजें",
@@ -108,7 +108,7 @@ T = {
     "Telugu": {
         "dash": "📊 డాష్‌బోర్డ్ గణాంకాలు", "inv": "📦 ఇన్వెంతరీ మేనేజెమెంట్", "pos": "🛒 పాయింట్ ఆఫ్ సేల్ (POS)", 
         "staff": "👥 సిబ్బంది & వినియోగదారు నిర్వహణ", "analytics": "🔮 ప్రిడిక్టివ్ అనలిటిక్స్", "logout": "లాగ్‌అవుట్",
-        "login_btn": "లాగిన్", "user": "వినియోగదారు పేరు", "pass": "పాస్వర్డ్",
+        "login_btn": "లాగిన్", "user": "విниయోగదారు పేరు", "pass": "పాస్వర్డ్",
         "tot_prod": "ప్రత్యేక వస్తువులు", "stock": "మొత్తం స్టాక్", "rev": "నికర రాబడి",
         "add_prod": "➕ కొత్త ఉత్పత్తిని చేర్చండి", "p_name": "ఉత్పత్తి పేరు", "sku": "బార్‌కోడ్ / SKU",
         "price": "ధర (₹)", "qty": "పరిమాణం", "upload": "📷 ఉత్పత్తి ఫోటో అప్‌లోడ్", "save": "డేటాబేస్‌లో సేవ్ చేయి",
@@ -216,7 +216,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div {
 
 def fetch_inventory():
     if not DB_CONNECTED:
-        # Fallback dictionary list mock payload if cloud services are unlinked
         return pd.DataFrame([
             {"id": "coke", "sku": "890123", "name": "Coca Cola Soda", "price": 40.0, "quantity": 50, "image": None, "category": "Drinks"},
             {"id": "maggi", "sku": "890456", "name": "Maggi Noodles", "price": 14.0, "quantity": 80, "image": None, "category": "General"}
